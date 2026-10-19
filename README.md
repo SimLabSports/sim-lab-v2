@@ -4,7 +4,7 @@ Next.js App Router, React, TypeScript, Tailwind and Lucide. The approved Home, B
 
 Latest production check: Fanatics and PostgreSQL now work. A real GCM request reached OpenAI but returned HTTP 401; the failed assessment was persisted and independently read back. See [production repair findings](docs/production-connection-repair.md) for current results and exact remaining configuration changes. Older operational notes below describe the earlier setup state.
 
-The automatic GCM approval engine is documented in [GCM approval rules](docs/gcm-approval-engine.md). It evaluates both participants, applies category-specific evidence/model/price/risk gates, and keeps standalone GCM approval separate from Triple Green Check. The reviewed model allowlist is currently empty; no calibrated probability or official approval is fabricated.
+The automatic GCM approval engine is documented in [GCM approval rules](docs/gcm-approval-engine.md). It evaluates both participants, applies category-specific evidence/model/price/risk gates, and supplies The Green Check Method as the third perspective in Triple Green Check. The reviewed model allowlist is currently empty; no calibrated probability or official approval is fabricated.
 
 ## Start and configure
 

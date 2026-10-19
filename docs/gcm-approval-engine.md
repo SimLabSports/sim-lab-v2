@@ -47,8 +47,8 @@ The displayed 95% Wilson band estimates the observed outcome rate in the relevan
 
 The offline training script is a development tool. Its existing four-feature reports do not automatically satisfy the richer approval schema and cannot be promoted unchanged. No fitted artifact, historical accuracy, profitable edge, model-driven official approval or live/blowout validation is claimed in the absence of the real required data and review.
 
-## Separate Triple Green Check
+## Third perspective in Triple Green Check
 
-The GCM perspective becomes available only when the current approval is APPROVED and fresh. Triple 3/3 additionally requires fresh Market Favorite and at least three qualifying independent expert sources to select the same exact comparable outcome. GCM approval alone is shown as GCM APPROVED, with triple alignment still incomplete where needed. A fully aligned, approved candidate can be QUALIFIED; a standalone GCM approval remains GCM_APPROVED. No expert vote is inferred from either research or prices.
+The GCM perspective becomes available only when the current approval is APPROVED and fresh. Triple 3/3 additionally requires fresh Market Favorite and at least three qualifying independent expert sources to select the same exact comparable outcome. The Green Check Method is the third perspective in the same 3/3 system. Its approval rules determine whether that perspective qualifies; the alignment indicators light only for qualifying perspectives supporting the market selection. A fully aligned candidate has internal status QUALIFIED; GCM_APPROVED is retained as an internal compatibility status when the method qualifies before all three agree. No expert vote is inferred from either research or prices.
 
 The existing design classes, stylesheets, stadium assets, logos and navigation are preserved. Approval summaries, expandable gate reasons, both-side evaluations, probabilities when validated, grades and categories use the existing panels.

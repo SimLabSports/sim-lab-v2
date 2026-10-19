@@ -76,7 +76,7 @@ export function evaluateMarketAlignment(event:MarketEvent,key:MarketKey='h2h',no
   const perspectives=[
     {key:'market',name:'Market Favorite',selection,available:!!selection,stale,source:'Fanatics via The Odds API',detail:selection?`Lowest-priced ${key==='outrights'?'futures':'moneyline'} selection. ${stale?'The original quote is stale and cannot count toward alignment.':'The source quote is within the freshness window.'}`:['spreads','totals'].includes(key)?'A spread or total is a separate market. Moneyline agreement cannot be carried over to it.':'No valid market favorite in the fetched prices.'},
     {key:'expert',name:'Expert Consensus',selection:null,available:false,stale:false,source:'Independent source pending',detail:'No verified analyst or independent model opinion is connected for this event. This check stays unevaluated.'},
-    {key:'method',name:'Green Check Method',selection:null,available:false,stale:false,source:'Statistical evaluation pending',detail:'Performance, form, injuries, and sport-specific metrics have not been evaluated by a validated model. This check stays unevaluated.'},
+    {key:'method',name:'The Green Check Method',selection:null,available:false,stale:false,source:'Statistical evaluation pending',detail:'Performance, form, injuries, and sport-specific metrics have not been evaluated by a validated model. This check stays unevaluated.'},
   ];
   const verified=perspectives.filter(item=>item.available&&!item.stale);
   return {perspectives,selection,updated,stale,implied:price===undefined?null:impliedProbability(price),evaluated:verified.length,aligned:hasVerifiedAlignment(perspectives),status:verified.length===3?'Evaluated':selection&&stale?'Stale market':'INCOMPLETE'};
