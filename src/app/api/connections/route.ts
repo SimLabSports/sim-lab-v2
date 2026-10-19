@@ -1,8 +1,29 @@
-import {database,databaseFailure} from '@/lib/server/database';
+import {database} from '@/lib/server/database';
+import {databaseDiagnostics} from '@/lib/server/database-diagnostics';
 import {NextResponse} from 'next/server';
 import {providerHealth} from '@/lib/server/provider-http';
+import type {GcmEvaluation} from '@/lib/research-types';
 export const dynamic='force-dynamic';
+export const runtime='nodejs';
+export const maxDuration=30;
 export async function GET(){
- let storage:{configured:boolean;connected:boolean;tablesReady:boolean;error:string|null;errorCode:string|null}={configured:!!process.env.DATABASE_URL,connected:false,tablesReady:false,error:null,errorCode:null};
- if(storage.configured){try{const result=await database().query("SELECT to_regclass('public.expert_picks') IS NOT NULL AND to_regclass('public.gcm_evaluations') IS NOT NULL AND to_regclass('public.intelligence_audit') IS NOT NULL AS ready");storage={...storage,connected:true,tablesReady:result.rows[0]?.ready===true};if(!storage.tablesReady)storage.error='Apply migrations/001_live_intelligence.sql to this database.';}catch(error){const reason=databaseFailure(error);storage.error=reason.message;storage.errorCode=reason.code;}}
- return NextResponse.json({odds:{configured:!!process.env.ODDS_API_KEY,...providerHealth('The Odds API')},mlbStatistics:{provider:'MLB Stats API',...providerHealth('MLB Stats API')},licensedStatistics:{configured:!!process.env.SPORTSDATAIO_API_KEY||['NFL','NBA','NHL','MLB'].some(sport=>!!process.env[`SPORTSDATAIO_${sport}_KEY`]),realDataConfirmed:process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true',...providerHealth('SportsDataIO')},ai:{configured:!!process.env.OPENAI_API_KEY&&!!process.env.OPENAI_MODEL,...providerHealth('OpenAI GCM')},expertStorage:storage,admin:{configured:(process.env.SIMLAB_ADMIN_TOKEN?.length??0)>=32}},{headers:{'Cache-Control':'no-store'}});}
+ const storage=await databaseDiagnostics();
+ const ai={configured:!!process.env.OPENAI_API_KEY&&!!process.env.OPENAI_MODEL,...providerHealth('OpenAI GCM'),lastAttemptAt:null as string|null,lastAssessmentStatus:null as string|null,lastErrorCode:null as string|null,lastPersistedEvaluationId:null as string|null,storageReadVerified:false};
+ let experts={provider:'Verified administrator-curated picks',storedPicks:null as number|null,currentlyUnexpiredPicks:null as number|null,minimumIndependentSources:3,licensedAutomaticFeedConnected:false};
+ if(storage.tablesReady){
+  const checks=await Promise.allSettled([
+   database().query<{record:GcmEvaluation}>("SELECT record FROM public.gcm_evaluations ORDER BY created_at DESC LIMIT 1"),
+   database().query<{record:GcmEvaluation}>("SELECT record FROM public.gcm_evaluations WHERE record->>'status'='LEAN_ONLY' ORDER BY created_at DESC LIMIT 1"),
+   database().query<{stored:number;current:number}>("SELECT count(*)::int AS stored,count(*) FILTER (WHERE retracted=false AND expires_at>now())::int AS current FROM public.expert_picks"),
+  ]);
+  const latest=checks[0],success=checks[1],picks=checks[2];
+  if(latest.status==='fulfilled'){
+   ai.storageReadVerified=true;
+   const evaluation=latest.value.rows[0]?.record;
+   if(evaluation){ai.lastAttemptAt=evaluation.createdAt;ai.lastAssessmentStatus=evaluation.status;ai.lastPersistedEvaluationId=evaluation.id;if(evaluation.status==='ERROR'){ai.lastError=evaluation.explanation;ai.lastErrorCode=evaluation.errorCode??null;}}
+  }
+  if(success.status==='fulfilled'&&success.value.rows[0])ai.lastSuccessAt=success.value.rows[0].record.createdAt;
+  if(picks.status==='fulfilled')experts={...experts,storedPicks:picks.value.rows[0].stored,currentlyUnexpiredPicks:picks.value.rows[0].current};
+ }
+ return NextResponse.json({odds:{configured:!!process.env.ODDS_API_KEY,...providerHealth('The Odds API')},mlbStatistics:{provider:'MLB Stats API',...providerHealth('MLB Stats API')},licensedStatistics:{configured:!!process.env.SPORTSDATAIO_API_KEY||['NFL','NBA','NHL','MLB'].some(sport=>!!process.env[`SPORTSDATAIO_${sport}_KEY`]),realDataConfirmed:process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true',...providerHealth('SportsDataIO')},ai,expertStorage:storage,experts,admin:{configured:(process.env.SIMLAB_ADMIN_TOKEN?.length??0)>=32}},{headers:{'Cache-Control':'no-store'}});
+}

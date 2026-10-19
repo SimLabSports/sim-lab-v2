@@ -1,10 +1,17 @@
 import 'server-only';
 import { Pool } from 'pg';
+import {inspectDatabaseConfiguration} from './database-configuration';
 const root=globalThis as typeof globalThis & {simlabDatabase?:Pool};
 export function databaseFailure(error:unknown):{code:string;message:string}{
  const item=error as {code?:string;message?:string;errors?:{code?:string}[]};
  const code=item?.code||item?.errors?.[0]?.code;
  const reasons:Record<string,string>={
+  DATABASE_URL_MISSING:'DATABASE_URL is absent in this deployment environment.',
+  DATABASE_URL_INVALID:'DATABASE_URL is not a valid complete PostgreSQL URI. Remove enclosing quotes/newlines, replace placeholders and percent-encode reserved password characters.',
+  PROJECT_MISMATCH:'DATABASE_URL does not identify SUPABASE_EXPECTED_PROJECT_REF. Copy the connection URI from the intended Sim Lab 2.0 Supabase project.',
+  DNS_TIMEOUT:'Database DNS lookup timed out. Verify the exact provider-generated pooler hostname; do not construct a hostname from a guessed region.',
+  '42P01':'A required public intelligence table is missing. Apply migrations/001_live_intelligence.sql to the connected database.',
+  '42703':'A required intelligence table column is missing. Check the schema against migrations/001_live_intelligence.sql.',
   ENOTFOUND:'The database hostname cannot be resolved. Copy the PostgreSQL connection URI from Supabase Connect; check the hostname.',
   ENETUNREACH:'The database network is unreachable. Use a Supabase connection endpoint reachable from Vercel, such as the IPv4 session pooler.',
   ECONNREFUSED:'The database host refused the connection. Verify the Supabase database is active and the connection port is correct.',
@@ -23,6 +30,7 @@ export function databaseFailure(error:unknown):{code:string;message:string}{
  return {code:'CONNECTION_FAILED',message:'Database connection failed. Verify DATABASE_URL is a PostgreSQL URI and that the Supabase database is active and reachable from Vercel.'};
 }
 export function database(){
- if(!process.env.DATABASE_URL)throw new Error('DATABASE_URL is not configured. Persistent research and expert storage is unavailable.');
- return root.simlabDatabase??=new Pool({connectionString:process.env.DATABASE_URL,max:4,connectionTimeoutMillis:8000,idleTimeoutMillis:30000});
+ const configuration=inspectDatabaseConfiguration();if(configuration.issue)throw configuration.issue;
+ // Unnamed parameterized queries are compatible with Supavisor transaction mode.
+ return root.simlabDatabase??=new Pool({connectionString:process.env.DATABASE_URL,max:4,connectionTimeoutMillis:8000,idleTimeoutMillis:30000,query_timeout:10000});
 }

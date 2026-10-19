@@ -9,6 +9,7 @@ const root=globalThis as typeof globalThis & {simlabProviders?:State};
 const state:State=root.simlabProviders??={cache:new Map(),pending:new Map(),backoff:new Map(),health:new Map()};
 export function providerHealth(provider:string){return state.health.get(provider)??{lastSuccessAt:null,lastError:null};}
 export function providerSucceeded(provider:string){state.health.set(provider,{lastSuccessAt:new Date().toISOString(),lastError:null});}
+export function providerFailed(provider:string,safeMessage:string){state.health.set(provider,{lastSuccessAt:state.health.get(provider)?.lastSuccessAt??null,lastError:safeMessage});}
 export async function providerJson<T>(options:{provider:string;cacheKey:string;url:string;headers?:Record<string,string>;ttl:number;validate:(input:unknown)=>T}):Promise<T>{
   const old=state.cache.get(options.cacheKey);
   if(old&&old.expires>Date.now())return old.value as T;

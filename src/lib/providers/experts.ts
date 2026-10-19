@@ -1,7 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import { database } from '../server/database';
+import { database,databaseFailure } from '../server/database';
 import type { ExpertPick, ExpertConsensus } from '../research-types';
 import { getMarket, type MarketEvent, type MarketKey } from '../markets';
 const sourceUrl=z.string().url().refine(url=>new URL(url).protocol==='https:','Source URL must use HTTPS.');
@@ -29,7 +29,7 @@ export async function importExpertPick(data:z.infer<typeof expertImportSchema>,e
 }
 export async function expertConsensus(event:MarketEvent,key:MarketKey,line:number|null):Promise<ExpertConsensus>{
  const empty:ExpertConsensus={status:'INSUFFICIENT_DATA',selection:null,supporters:0,total:0,share:null,sources:[],excluded:0,reason:'At least three verified independent sources for this exact market and line are required.'};
- let records:ExpertPick[];try{records=await new ManualCuratedProvider().getPicks(event,key);}catch{return {...empty,status:'UNAVAILABLE',reason:'Expert storage is not connected or its migration has not been applied.'};}
+ let records:ExpertPick[];try{records=await new ManualCuratedProvider().getPicks(event,key);}catch(error){return {...empty,status:'UNAVAILABLE',reason:`Expert storage unavailable: ${databaseFailure(error).message}`};}
  const now=Date.now();const start=Date.parse(event.commence_time);const maxAge=Math.max(1,Math.min(168,Number(process.env.EXPERT_MAX_AGE_HOURS)||48))*3600000;
  const market=getMarket(event,key);const targetLine=key==='spreads'&&line!==null?Math.abs(line):line;
  const eligible=records.filter(p=>p.reviewed&&!p.retracted&&p.eventId===event.id&&p.sport===event.sport_key&&p.market===key&&Date.parse(p.startTime)===start&&Date.parse(p.publishedAt)<start&&Date.parse(p.publishedAt)<=now&&now-Date.parse(p.publishedAt)<maxAge&&Date.parse(p.expiresAt)>now&&now<start&&!!p.licenseBasis&&(p.bookmaker===null||p.bookmaker==='fanatics')&&market?.outcomes.some(outcome=>outcome.name===p.selection&&(outcome.point??null)===p.line&&(p.price===null||outcome.price===p.price))&&(key==='spreads'?Math.abs(p.line??NaN)===targetLine:p.line===line));
@@ -38,6 +38,6 @@ export async function expertConsensus(event:MarketEvent,key:MarketKey,line:numbe
  for(const pick of eligible.sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt))){const normalize=(s:string)=>s.trim().toLowerCase();const origin=normalize(pick.originId),organization=normalize(pick.organizationId),analyst=normalize(pick.analystId);if(origins.has(origin)||organizations.has(organization)||analysts.has(analyst))continue;origins.add(origin);organizations.add(organization);analysts.add(analyst);unique.push(pick);}
  const votes=new Map<string,number>();for(const pick of unique)votes.set(pick.selection,(votes.get(pick.selection)??0)+1);
  const sorted=[...votes].sort((a,b)=>b[1]-a[1]);const supporters=sorted[0]?.[1]??0;
- if(unique.length<3)return {...empty,sources:unique,total:unique.length,supporters,excluded:records.length-unique.length};
+ if(unique.length<3)return {...empty,sources:unique,total:unique.length,supporters,excluded:records.length-unique.length,reason:`${unique.length} verified independent sources qualify for this exact event, market and line; at least three are required. ${records.length-unique.length} stored picks were excluded as duplicate, expired, unverified or non-comparable. No automated licensed expert feed is connected.`};
  const majority=supporters>unique.length/2;return {status:majority?'QUALIFIED':'MIXED',selection:majority?sorted[0][0]:null,supporters,total:unique.length,share:supporters/unique.length*100,sources:unique,excluded:records.length-unique.length,reason:majority?'Verified independent source selection share; not an outcome probability.':'No majority among the verified independent sources.'};
 }

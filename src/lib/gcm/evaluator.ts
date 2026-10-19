@@ -2,8 +2,9 @@ import 'server-only';
 import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {getStatistics} from '../providers/statistics';
-import {database} from '../server/database';
-import {providerSucceeded} from '../server/provider-http';
+import {database,databaseFailure} from '../server/database';
+import {providerSucceeded,providerFailed} from '../server/provider-http';
+import {openAiFailure} from './openai-errors';
 import {admitScan} from './scan-budget';
 import {GREEN_CHECK_RESEARCH_INSTRUCTIONS} from './green-check-instructions';
 import type {GcmEvaluation,ResearchInput} from '../research-types';
@@ -28,7 +29,7 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   const save=async(result:GcmEvaluation)=>{
    result={...result,createdAt:new Date().toISOString(),expiresAt:new Date(Math.min(Date.parse(result.expiresAt),Date.parse(event.commence_time))).toISOString()};
    if(!process.env.DATABASE_URL)return result;
-   try{await record(result);return result;}catch{return {...result,status:'ERROR' as const,selection:null,factors:[],eligibleForAlignment:false,eligibleForFeatured:false,explanation:'Research storage is unavailable. Verify DATABASE_URL, the three migrated tables and server database permissions. No auditable result was published.'};}
+   try{await record(result);return result;}catch(error){const reason=databaseFailure(error);return {...result,status:'ERROR' as const,errorCode:reason.code,selection:null,factors:[],eligibleForAlignment:false,eligibleForFeatured:false,explanation:`Research storage is unavailable: ${reason.message} No auditable result was published.`};}
   };
   if(!input.pregame){evaluation.explanation='Pregame GCM is unavailable for started, delayed, suspended, canceled, or unmatched events.';return save(evaluation);}
   if(input.status==='ERROR'||input.evidence.length<6){evaluation.explanation=`Insufficient verified statistical evidence. ${input.gaps.join(' ')}`;return save(evaluation);}
@@ -42,7 +43,12 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   try{
    await admitScan(`${identity}:${event.commence_time}`,visitor);
    const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},cache:'no-store',signal:AbortSignal.timeout(45000),body:JSON.stringify({model:process.env.OPENAI_MODEL,store:false,max_output_tokens:1800,instructions:GREEN_CHECK_RESEARCH_INSTRUCTIONS,input:JSON.stringify({event:{sport:event.sport_key,home:input.home,away:input.away,start:input.startTime,market:key},evidence:input.evidence,risks}),text:{format:{type:'json_schema',name:'gcm_grounded_research',strict:true,schema}}})});
-   if(!response.ok)throw new Error(`OpenAI returned HTTP ${response.status}. Check the server key, model access and billing.`);
+   if(!response.ok){
+    const providerError=await response.json().catch(()=>null);
+    const reason=openAiFailure(response.status,providerError?.error?.code);
+    providerFailed('OpenAI GCM',reason.message);
+    return save({...evaluation,status:'ERROR',errorCode:reason.code,explanation:reason.message,expiresAt:new Date(Date.now()+90000).toISOString()});
+   }
    const payload=await response.json();
    const raw=payload.output?.flatMap((item:{content?:{type:string;text?:string}[]})=>item.content??[]).filter((part:{type:string})=>part.type==='output_text').map((part:{text:string})=>part.text).join('');
    if(payload.status!=='completed'||!raw)throw new Error('The AI provider did not complete a valid grounded response.');

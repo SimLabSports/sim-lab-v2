@@ -2,6 +2,8 @@
 
 Next.js App Router, React, TypeScript, Tailwind and Lucide. The approved Home, Board and Matchup styling is preserved. The application now uses direct server providers only. Saved market snapshots, sample matchups and demo routes were removed. No automated suites or demo datasets were created in this implementation phase.
 
+Latest production check: Fanatics and PostgreSQL now work. A real GCM request reached OpenAI but returned HTTP 401; the failed assessment was persisted and independently read back. See [production repair findings](docs/production-connection-repair.md) for current results and exact remaining configuration changes. Older operational notes below describe the earlier setup state.
+
 ## Start and configure
 
 Install with `npm install`, configure server-only environment variables using the blank `.env.example` as the field reference, then `npm run dev`. Preview: http://localhost:3000. Build: `npm run build`.
