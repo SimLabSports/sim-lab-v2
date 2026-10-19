@@ -39,9 +39,14 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   if(!['baseball_mlb','americanfootball_nfl','basketball_nba','icehockey_nhl'].includes(event.sport_key)||key!=='h2h'){evaluation.explanation=`Verified GCM research features are not mapped for ${event.sport_key} / ${key}. Moneyline research is never transferred to spread, total or futures markets.`;return save(evaluation);}
   const allowedIds=new Set(input.evidence.map(item=>item.id));
   const risks=[...input.risks,...input.gaps];
-  const schema={type:'object',properties:{selection:{type:['string','null'],enum:[input.home,input.away,null]},supportingEvidenceIds:{type:'array',items:{type:'string',enum:[...allowedIds]}},counterEvidenceIds:{type:'array',items:{type:'string',enum:[...allowedIds]}},riskIndices:{type:'array',items:{type:'integer',minimum:0}}},required:['selection','supportingEvidenceIds','counterEvidenceIds','riskIndices'],additionalProperties:false};
+  const schema={type:'object',properties:{selection:{type:['string','null'],enum:[input.home,input.away,null]},supportingEvidenceIds:{type:'array',maxItems:12,items:{type:'string',enum:[...allowedIds]}},counterEvidenceIds:{type:'array',maxItems:12,items:{type:'string',enum:[...allowedIds]}},riskIndices:{type:'array',maxItems:30,items:{type:'integer',minimum:0}}},required:['selection','supportingEvidenceIds','counterEvidenceIds','riskIndices'],additionalProperties:false};
+  try{await admitScan(`${identity}:${event.commence_time}`,visitor);}catch(error){
+   const message=error instanceof Error?error.message:'';
+   const busy=message.startsWith('This matchup');const limited=message.startsWith('The research scan limit');
+   const reason=busy||limited?{code:busy?'GCM_SCAN_BUSY':'GCM_SCAN_LIMIT',message}:databaseFailure(error);
+   return save({...evaluation,status:'ERROR',errorCode:reason.code,explanation:`Research scan admission: ${reason.message}`,expiresAt:new Date(Date.now()+90000).toISOString()});
+  }
   try{
-   await admitScan(`${identity}:${event.commence_time}`,visitor);
    const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},cache:'no-store',signal:AbortSignal.timeout(45000),body:JSON.stringify({model:process.env.OPENAI_MODEL,store:false,max_output_tokens:1800,instructions:GREEN_CHECK_RESEARCH_INSTRUCTIONS,input:JSON.stringify({event:{sport:event.sport_key,home:input.home,away:input.away,start:input.startTime,market:key},evidence:input.evidence,risks}),text:{format:{type:'json_schema',name:'gcm_grounded_research',strict:true,schema}}})});
    if(!response.ok){
     const providerError=await response.json().catch(()=>null);
@@ -61,6 +66,11 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
    const age=Math.max(1,Math.min(60,Number(process.env.GCM_MAX_AGE_MINUTES)||15))*60000;
    evaluation={...evaluation,selection:selected,status:'LEAN_ONLY',explanation:selected?`Research lean: ${selected}. The AI selected the cited statistical evidence below. Probability is unavailable; the research assessment has not been calibrated and cannot qualify a featured candidate.`:'The grounded statistical assessment does not establish a supported selection. Probability is unavailable.',factors,risks:[...risks,...decision.counterEvidenceIds.map(id=>{const e=input.evidence.find(item=>item.id===id)!;return `Counter-evidence: ${e.entity} ${e.metric} = ${e.value}.`;})],modelVersion:`${version}:${model}:${hash}`,eligibleForAlignment:false,eligibleForFeatured:false,expiresAt:new Date(Math.min(Date.now()+age,Date.parse(event.commence_time))).toISOString()};
    providerSucceeded('OpenAI GCM');return save(evaluation);
-  }catch(error){return save({...evaluation,status:'ERROR',expiresAt:new Date(Math.min(Date.now()+90000,Date.parse(event.commence_time))).toISOString(),explanation:error instanceof Error&&/^(OpenAI|The AI|The research|This matchup)/.test(error.message)?error.message:'The AI research provider or shared scan budget is unavailable. Verify API access, database connectivity and billing. No estimate was substituted.'});}
+  }catch(error){
+   const invalid=error instanceof z.ZodError;const malformed=error instanceof SyntaxError;
+   const reason=invalid?'The AI research response failed the evidence schema checks. No unsupported result was published.':malformed?'The AI research response was not valid structured JSON. No unsupported result was published.':error instanceof Error&&/^(OpenAI|The AI|The research|This matchup)/.test(error.message)?error.message:'The OpenAI research request could not be processed. Check provider connectivity and the configured model. No estimate was substituted.';
+   providerFailed('OpenAI GCM',reason);
+   return save({...evaluation,status:'ERROR',errorCode:invalid?'OPENAI_RESPONSE_VALIDATION_FAILED':malformed?'OPENAI_RESPONSE_INVALID_JSON':'OPENAI_RESPONSE_FAILED',expiresAt:new Date(Math.min(Date.now()+90000,Date.parse(event.commence_time))).toISOString(),explanation:reason});
+  }
  })();busy.set(identity,task);try{return await task;}finally{busy.delete(identity);}
 }
