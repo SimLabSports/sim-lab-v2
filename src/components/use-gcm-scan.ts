@@ -17,7 +17,7 @@ export function useGcmScan(event:MarketEvent,market:MarketKey){
   let task=pending.get(key);
   if(!task){
    const cached=results.get(key);
-   if(cached?.gcm&&Date.parse(cached.gcm.expiresAt)>Date.now())return;
+   if(cached?.gcm&&Date.parse(cached.gcm.expiresAt)>Date.now()&&(!cached.gcm.approval||Date.parse(cached.gcm.approval.expiresAt)>Date.now()))return;
    task=(async()=>{
     const response=await fetch('/api/gcm/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:event.id,sport:event.sport_key,market}),cache:'no-store',signal:AbortSignal.timeout(65000)});
     const value=await response.json();
@@ -32,6 +32,8 @@ export function useGcmScan(event:MarketEvent,market:MarketKey){
   finally{pending.delete(key);listeners.forEach(update=>update());}
  },[key,event.id,event.sport_key,market]);
  const result=results.get(key);
+ const expiry=result?.gcm?.approval?.expiresAt??event.intelligence?.[market]?.gcm?.approval?.expiresAt;
+ useEffect(()=>{const delay=expiry?Date.parse(expiry)-Date.now():NaN;if(!Number.isFinite(delay)||delay<=0)return;const timer=setTimeout(()=>refresh(value=>value+1),Math.min(delay+25,2147483647));return()=>clearTimeout(timer);},[expiry]);
  const usable=result?.gcm&&Date.parse(result.gcm.expiresAt)>Date.now()?result:undefined;
  return {event:usable?{...event,intelligence:{...event.intelligence,[market]:usable}}:event,loading:pending.has(key),error,run};
 }

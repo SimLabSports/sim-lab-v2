@@ -13,7 +13,7 @@ export async function GET(){
  if(storage.tablesReady){
   const checks=await Promise.allSettled([
    database().query<{record:GcmEvaluation}>("SELECT record FROM public.gcm_evaluations ORDER BY created_at DESC LIMIT 1"),
-   database().query<{record:GcmEvaluation}>("SELECT record FROM public.gcm_evaluations WHERE record->>'status'='LEAN_ONLY' ORDER BY created_at DESC LIMIT 1"),
+   database().query<{record:GcmEvaluation}>("SELECT record FROM public.gcm_evaluations WHERE record->>'status' IN ('LEAN_ONLY','APPROVED','PASS','INCOMPLETE') AND record->>'modelVersion' LIKE 'gcm-grounded-research-%:%' ORDER BY created_at DESC LIMIT 1"),
    database().query<{stored:number;current:number}>("SELECT count(*)::int AS stored,count(*) FILTER (WHERE retracted=false AND expires_at>now())::int AS current FROM public.expert_picks"),
   ]);
   const latest=checks[0],success=checks[1],picks=checks[2];

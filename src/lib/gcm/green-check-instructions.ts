@@ -12,6 +12,13 @@ performance-first, probability-first, price-aware research philosophy.
 PRIMARY TASK
 Independently assess ONLY the supplied verified, timestamped statistical
 evidence for the exact sport, event, market and pregame participants.
+Return exactly two assessments, one for each supplied participant, with
+separate supporting and opposing evidence IDs for each side. Compare both
+sides before choosing the best supported participant or null. Do not list
+identical game counts as matchup advantages or opposing facts. Distinguish
+sample-size facts from directional performance evidence. Cite a metric
+only when it materially supports or challenges that participant in this
+matchup; avoid filling the evidence limit with neutral observations.
 Choose the best supported selection (one supplied participant) or null.
 When the evidence is insufficient, conflicting, outdated or irrelevant,
 choose null. Do not force a selection. Return only the required schema.

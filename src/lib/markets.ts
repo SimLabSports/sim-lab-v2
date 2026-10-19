@@ -3,7 +3,7 @@ export type Outcome = { name: string; price: number; point?: number; description
 export type Market = { key: string; last_update?: string; outcomes: Outcome[] };
 export type Bookmaker = { key: string; title: string; last_update?: string; markets: Market[] };
 export type Perspective={key:string;name:string;selection:string|null;available:boolean;stale:boolean;source:string;detail:string};
-export type LiveEvaluation={perspectives:Perspective[];selection:string|null;updated:string|undefined;stale:boolean;implied:number|null;evaluated:number;aligned:boolean;status:string;experts?:import('./research-types').ExpertConsensus;gcm?:import('./research-types').GcmEvaluation|null;probability?:null;edgePp?:null;candidateStatus?:string};
+export type LiveEvaluation={perspectives:Perspective[];selection:string|null;updated:string|undefined;stale:boolean;implied:number|null;evaluated:number;aligned:boolean;status:string;experts?:import('./research-types').ExpertConsensus;gcm?:import('./research-types').GcmEvaluation|null;probability?:number|null;edgePp?:number|null;candidateStatus?:string};
 export type MarketEvent = { id: string; sport_key: string; sport_title: string; commence_time: string; home_team: string | null; away_team: string | null; bookmakers: Bookmaker[]; intelligence?:Partial<Record<MarketKey,LiveEvaluation>> };
 export type SportFeed = { key: string; title: string; group: string; description: string; hasOutrights: boolean; fetchedAt: string | null; error: string | null; events: MarketEvent[] };
 export type MarketSnapshot = { source: string; bookmaker: string; capturedAt: string; sports: SportFeed[] };
@@ -58,7 +58,16 @@ export function hasVerifiedAlignment(perspectives: {selection: string | null; av
 
 export function evaluateMarketAlignment(event:MarketEvent,key:MarketKey='h2h',now=Date.now()):LiveEvaluation {
   const published=event.intelligence?.[key];
-  if(published){const stale=isStale(published.updated,now);const perspectives=published.perspectives.map(p=>({...p,stale:p.key==='market'?stale:p.key==='expert'?p.stale||now>=Date.parse(event.commence_time)||!!published.experts?.sources.some(source=>now>=Date.parse(source.expiresAt)):p.stale||!!published.gcm&&now>=Date.parse(published.gcm.expiresAt)}));return {...published,stale,perspectives,evaluated:perspectives.filter(p=>p.available&&!p.stale&&!!published.selection&&p.selection===published.selection).length,status:perspectives.every(p=>p.available&&!p.stale)?'EVALUATED':'INCOMPLETE',aligned:hasVerifiedAlignment(perspectives)};}
+  if(published){
+    const stale=isStale(published.updated,now);
+    let gcm=published.gcm;
+    if(gcm?.approval?.approved&&(stale||now>=Date.parse(gcm.approval.expiresAt)||now>=Date.parse(gcm.expiresAt))){
+      const reason='GCM approval freshness expired or the market quote is stale. Refresh before treating this as official approval.';
+      gcm={...gcm,status:'INCOMPLETE',eligibleForAlignment:false,eligibleForFeatured:false,probability:null,edgePp:null,uncertainty:null,explanation:reason,approval:{...gcm.approval,approved:false,status:'INCOMPLETE',grade:null,category:null,reasons:[reason],candidates:gcm.approval.candidates.map(c=>({...c,approved:false,status:'INCOMPLETE',grade:null,category:null,gates:[...c.gates,{key:'expired',status:'MISSING',reason}],reasons:[reason]}))}};
+    }
+    const perspectives=published.perspectives.map(p=>({...p,available:p.key==='method'?p.available&&gcm?.status==='APPROVED'&&gcm.approval?.approved===true:p.available,stale:p.key==='market'?stale:p.key==='expert'?p.stale||now>=Date.parse(event.commence_time)||!!published.experts?.sources.some(source=>now>=Date.parse(source.expiresAt)):p.stale||!!gcm&&now>=Date.parse(gcm.approval?.expiresAt??gcm.expiresAt)}));
+    return {...published,gcm,stale,perspectives,evaluated:perspectives.filter(p=>p.available&&!p.stale&&!!published.selection&&p.selection===published.selection).length,status:perspectives.every(p=>p.available&&!p.stale)?'EVALUATED':'INCOMPLETE',aligned:hasVerifiedAlignment(perspectives)};
+  }
   const market=getMarket(event,key);
   const selection=marketFavorite(market);
   const updated=market?.last_update||getBook(event)?.last_update;

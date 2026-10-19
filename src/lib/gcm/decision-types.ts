@@ -1,0 +1,10 @@
+export type GcmCategory='SAFE'|'VALUE'|'BLOWOUT'|'LIVE CONTROL'|'UPSET RADAR';
+export type ApprovalGate={key:string;status:'PASS'|'FAIL'|'MISSING';reason:string;evidenceIds?:string[]};
+export type Verification={kind:'lineup'|'injuries'|'workload'|'environment'|'integrity'|'settlement'|'liveState';status:'CLEAR'|'BLOCKED'|'UNKNOWN';evidenceIds:string[];observedAt:string};
+export type SideResearch={selection:string;supportingEvidenceIds:string[];counterEvidenceIds:string[]};
+export type CalibrationBand={low:number;high:number;level:0.95;method:'HELD_OUT_BIN_WILSON';sample:number};
+export type Forecast={selection:string;probability:number;uncertainty:CalibrationBand;modelVersion:string;featureEvidenceIds:string[];advantages:number;recentFormVerified:boolean;consistencyVerified:boolean;sampleVerified:boolean;minimumAdvantages:number;phase:'PREGAME'|'LIVE';margin?:{expected:number;low:number;high:number;threshold:number;modelVersion:string}};
+export type Prediction={status:'VALIDATED'|'UNAVAILABLE'|'INVALID';reason:string;forecasts:Forecast[];expiresAt:string|null};
+export type CategoryDecision={category:GcmCategory;status:'QUALIFIED'|'FAIL'|'INCOMPLETE';gates:ApprovalGate[]};
+export type CandidateDecision={selection:string;status:'APPROVED'|'LEAN'|'PASS'|'INCOMPLETE';approved:boolean;grade:'A'|'A+'|null;category:GcmCategory|null;price:number|null;impliedProbability:number|null;probability:number|null;edgePp:number|null;expectedReturn:number|null;uncertainty:CalibrationBand|null;modelVersion:string|null;gates:ApprovalGate[];categories:CategoryDecision[];qualifyingEvidenceIds:string[];reasons:string[]};
+export type GcmApproval={ruleVersion:string;assessedAt:string;expiresAt:string;status:CandidateDecision['status'];approved:boolean;selection:string|null;grade:CandidateDecision['grade'];category:GcmCategory|null;price:number|null;probability:number|null;edgePp:number|null;uncertainty:CalibrationBand|null;modelVersion:string|null;reasons:string[];candidates:CandidateDecision[]};

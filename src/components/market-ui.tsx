@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Activity, BarChart3, Check, Clock3, Minus, ShieldCheck, Trophy, Users, X } from 'lucide-react';
+import {GcmDecision} from './gcm-decision';
 import {useGcmScan} from './use-gcm-scan';
 import { teamIdentity } from '@/lib/team-identity';
 import { evaluateMarketAlignment } from '@/lib/alignment';
@@ -52,8 +53,9 @@ export function AlignmentInspector({event,marketKey='h2h',large=false}:{event:Ma
     <dialog ref={dialog} className="alignment-dialog" onClick={event=>{if(event.target===event.currentTarget)dialog.current?.close();}} aria-labelledby={`alignment-title-${event.id}-${marketKey}`}>
       <div className="alignment-dialog-heading"><span className="eyebrow">THE TRIPLE GREEN CHECK</span><button className="icon-button" onClick={()=>dialog.current?.close()} aria-label="Close alignment"><X size={18}/></button></div>
       <h2 id={`alignment-title-${event.id}-${marketKey}`}>Three perspectives.<br/><span>A clearer picture.</span></h2><p className="alignment-event-name">{eventTitle(event)}</p>
-      <div className="alignment-evaluations">{evaluation.perspectives.map((p,index)=>{const Icon=icons[index];return <section key={p.key}><Icon size={24}/><div><h3>{p.name}</h3><strong>{p.selection??'Awaiting evaluation'}</strong><p>{p.detail}</p><small>{p.source}{p.key==='market'&&evaluation.updated&&` · ${formatUpdated(evaluation.updated)}`}</small></div><span className={`evaluation-state ${p.available&&!p.stale&&p.selection===evaluation.selection?'ready':p.stale&&p.available?'stale':''}`}>{p.available?(p.stale?'STALE':p.selection===evaluation.selection?'AGREES':'OPPOSES'):p.key==='method'?(scan.loading?'EVALUATING':evaluation.gcm?.status==='LEAN_ONLY'?'RESEARCH LEAN':evaluation.gcm?.status==='ERROR'?'ERROR':'INCOMPLETE'):'PENDING'}</span></section>;})}</div>
+      <div className="alignment-evaluations">{evaluation.perspectives.map((p,index)=>{const Icon=icons[index];return <section key={p.key}><Icon size={24}/><div><h3>{p.name}</h3><strong>{p.selection??'Awaiting evaluation'}</strong><p>{p.detail}</p><small>{p.source}{p.key==='market'&&evaluation.updated&&` · ${formatUpdated(evaluation.updated)}`}</small></div><span className={`evaluation-state ${p.available&&!p.stale&&p.selection===evaluation.selection?'ready':p.stale&&p.available?'stale':''}`}>{p.available?(p.stale?'STALE':p.key==='method'?'GCM APPROVED':p.selection===evaluation.selection?'AGREES':'OPPOSES'):p.key==='method'?(scan.loading?'EVALUATING':evaluation.gcm?.status==='LEAN_ONLY'?'RESEARCH LEAN':evaluation.gcm?.status==='ERROR'?'ERROR':'INCOMPLETE'):'PENDING'}</span></section>;})}</div>
       {scan.error&&<p className="alignment-event-name" role="alert">{scan.error}</p>}
+      {evaluation.gcm&&<GcmDecision evaluation={evaluation.gcm}/>}
       {evaluation.gcm&&<p className="alignment-event-name">{evaluation.gcm.status==='LEAN_ONLY'?'RESEARCH LEAN · NOT VALIDATED GREEN APPROVAL':evaluation.gcm.status} · Statistics retrieved {formatUpdated(evaluation.gcm.input.retrievedAt)} · Evaluated {formatUpdated(evaluation.gcm.createdAt)}</p>}
       {evaluation.experts?.sources.map(source=><p className="alignment-event-name" key={source.id}><a href={source.sourceUrl} target="_blank" rel="noopener noreferrer">{source.analystName} · {source.sourceName}</a><br/>{source.selection} · {formatUpdated(source.publishedAt)} · Curated verified source</p>)}
       {evaluation.gcm?.factors.map((factor,index)=><p className="alignment-event-name" key={index}>{factor.text} {factor.evidenceIds.map(id=>{const evidence=evaluation.gcm?.input.evidence.find(item=>item.id===id);return evidence?<a key={id} href={evidence.sourceUrl} target="_blank" rel="noopener noreferrer">[{id}]</a>:null;})}</p>)}
