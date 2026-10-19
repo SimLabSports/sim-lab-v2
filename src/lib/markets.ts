@@ -58,7 +58,7 @@ export function hasVerifiedAlignment(perspectives: {selection: string | null; av
 
 export function evaluateMarketAlignment(event:MarketEvent,key:MarketKey='h2h',now=Date.now()):LiveEvaluation {
   const published=event.intelligence?.[key];
-  if(published){const stale=isStale(published.updated,now);const perspectives=published.perspectives.map(p=>({...p,stale:p.key==='market'?stale:p.key==='expert'?p.stale||now>=Date.parse(event.commence_time):p.stale||!!published.gcm&&now>=Date.parse(published.gcm.expiresAt)}));return {...published,stale,perspectives,evaluated:perspectives.filter(p=>p.available&&!p.stale).length,aligned:hasVerifiedAlignment(perspectives)};}
+  if(published){const stale=isStale(published.updated,now);const perspectives=published.perspectives.map(p=>({...p,stale:p.key==='market'?stale:p.key==='expert'?p.stale||now>=Date.parse(event.commence_time)||!!published.experts?.sources.some(source=>now>=Date.parse(source.expiresAt)):p.stale||!!published.gcm&&now>=Date.parse(published.gcm.expiresAt)}));return {...published,stale,perspectives,evaluated:perspectives.filter(p=>p.available&&!p.stale&&!!published.selection&&p.selection===published.selection).length,status:perspectives.every(p=>p.available&&!p.stale)?'EVALUATED':'INCOMPLETE',aligned:hasVerifiedAlignment(perspectives)};}
   const market=getMarket(event,key);
   const selection=marketFavorite(market);
   const updated=market?.last_update||getBook(event)?.last_update;

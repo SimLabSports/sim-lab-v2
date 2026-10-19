@@ -11,12 +11,12 @@ Never put provider secrets in `NEXT_PUBLIC_` variables. Never commit `.env.local
 ## Operational status verified October 19, 2026
 
 - Official MLB Stats API: successfully retrieved the day's real schedule and a 57-observation research packet for an actual matched game. Includes season hitting/pitching metrics, recent completed results, home/away recent records, rest and available probable pitchers. Confirmed batting lineups, comprehensive injuries, bullpen workload, park/weather and other advanced features are explicitly missing. This is research coverage, not a validated prediction model.
-- Direct The Odds API adapter: implemented, not operational in this environment because `ODDS_API_KEY` is absent. The existing chat connector cannot supply its private credential to Next.js.
-- OpenAI GCM interpretation: implemented, awaiting `OPENAI_API_KEY`, `OPENAI_MODEL`, and persistent audit storage. No AI evaluation has been claimed as successfully run.
-- Expert curation: authenticated entry and PostgreSQL persistence implemented, awaiting `DATABASE_URL`, migration application, and `SIMLAB_ADMIN_TOKEN`. No real analyst votes are seeded.
+- Direct The Odds API adapter: actual local Fanatics events were retrieved. Production `/api/connections` still reports `ODDS_API_KEY` absent; add that exact server secret in the existing Vercel project and redeploy.
+- OpenAI GCM interpretation: production reports OpenAI configuration present. Local OpenAI/database secrets are absent; no successful end-to-end AI call has been verified. Production market credential blocks selecting a live event there.
+- Expert curation: PostgreSQL persistence and authenticated import are implemented. Production reports database configured; `SIMLAB_ADMIN_TOKEN` is missing. The connections endpoint now probes connectivity and table existence. No real analyst votes are seeded.
 - Licensed SportsDataIO expansion: NFL/NBA/NHL/MLB team/event mapping and available season statistics retrieval implemented against documented endpoints. Awaiting subscribed real-data credentials and confirmation that inputs are not scrambled trial statistics. Complete sport-specific lineups, injuries, recent game stats and advanced features are not yet mapped for these products. NCAA, soccer and tennis statistics still require their own verified provider adapters.
 
-See `/api/connections` for process-local configuration and actual successful retrieval timestamps. Configuration alone is never a verified connection. Cache and connection status are process-local; multi-instance deployments need shared coordination before launch.
+See `/api/connections` for process-local configuration and actual successful retrieval timestamps. Configuration alone is never a verified connection. Market caches and provider health are process-local. Billable scan admission, quotas and cross-worker duplicate leases use PostgreSQL.
 
 ## Market data
 
@@ -30,7 +30,7 @@ Original quote timestamps remain authoritative. Stale quotes cannot count as fre
 
 `src/lib/gcm/evaluator.ts` sends only verified statistical inputs to the server-side OpenAI Responses API using strict structured output. It sends neither sportsbook odds nor expert selections. AI can select supplied evidence IDs, counter-evidence and a qualitative research lean. Narrative facts are rendered from original evidence values rather than unconstrained generated claims. Invalid references, refusals, incomplete responses and provider errors fail closed. Every published evaluation must be persisted with inputs, timestamps and version identifiers.
 
-Only pregame MLB moneyline qualitative research is currently implemented. All quantitative probabilities, edges and uncertainty intervals remain null. No trained/calibrated probability model is supplied. Research leans are not eligible for a green GCM approval or featured recommendation. Other sport/market extractors and validated models are required to enable those approvals honestly.
+Pregame MLB moneyline research uses official data. NFL/NBA/NHL moneyline qualitative research can use verified season statistics from configured real-data SportsDataIO subscriptions, explicitly retaining all missing advanced features and injury/lineup gaps. NCAA Football/Basketball, soccer and tennis require verified sport-specific adapters; unsupported markets give a precise reason. All quantitative probabilities, edges and uncertainty intervals remain null. An offline, sport-specific logistic fitting and Platt calibration pipeline is supplied; no trained/calibrated artifact is claimed without real historical records. See `docs/gcm-operations.md`. Research leans are not eligible for a green GCM approval or featured recommendation. Other sport/market extractors and validated models are required to enable those approvals honestly.
 
 ## Expert consensus and administrator entry
 
@@ -51,7 +51,7 @@ Provider investigation is recorded in `docs/provider-access.md`. No automated ex
 - `GET /api/statistics/mlb?date=YYYY-MM-DD&gameId=...`: real official research inputs for a listed game; no sportsbook inference.
 - `GET /api/statistics?eventId=...&sport=...`: statistics for an event validated through the market provider.
 - `GET /api/intelligence`, `/api/alignment`, `/api/expert-consensus`: use eventId, sport and market query parameters; read current verified inputs.
-- `POST /api/gcm/evaluate`: administrator-only billable grounded research; accepts eventId, sport, market.
+- `POST /api/gcm/evaluate`: same-origin explicit user scan, shared persistent quotas and cache; accepts eventId, sport, market.
 - `POST /api/admin/session`: administrator sign-in. `DELETE` signs out.
 - `POST /api/admin/expert-picks`: authenticated, exact-market attributed import. `DELETE` retracts an existing record.
 - `GET /api/connections`: configuration flags and actual retrieval status; never secrets.
@@ -69,3 +69,11 @@ Experts and persistence: `src/lib/providers/experts.ts`, `src/lib/server/databas
 Authentication: `src/lib/server/admin-auth.ts`.
 Alignment: `src/lib/server/intelligence.ts`, `src/lib/markets.ts`.
 Existing frontend components consume the backend while retaining their approved CSS, imagery, logo assets and layout. The isolated `/admin` page is the new operational entry surface.
+
+## Explicit scans and cost controls
+
+Home opens Board Scan. Select a matchup and open its existing alignment checks, or select the Analysis tab on Matchup Detail, to initiate research. Opening checks on a Board row also runs that exact event/market. The shared client hook updates the detail perspectives and inspector from the real response. Passive pages/polling only read saved results. There are no batch AI scans.
+
+Successful research is saved for up to 15 minutes, bounded by event start. Authentic incomplete assessments are saved for five minutes; provider failures are saved for 90 seconds. Cross-worker admission uses an advisory transaction lock and a 90-second event lease in the existing audit table. Default limits: 20 admitted evaluations/hour, 50/day and 5/visitor/hour. Visitor addresses are hashed before storage. These are call-count controls, not dollar spend guarantees; configure provider project spend limits separately. Storage/budget failures prevent paid AI calls. No additional migration is required for scan controls.
+
+The original stylesheets, stadium images, logo assets and layout classes are unchanged. Research results are displayed inside the existing panels. Check counts reflect fresh agreement with the current market selection; qualitative research never turns a GCM check green.

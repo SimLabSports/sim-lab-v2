@@ -13,7 +13,12 @@ export function sessionValid(value?:string){
  return timingSafeEqual(Buffer.from(parts[2],'hex'),Buffer.from(signature,'hex'));
 }
 export function authorized(request:NextRequest){return sessionValid(request.cookies.get(adminCookie)?.value);}
-export function sameOrigin(request:NextRequest){return request.headers.get('origin')===new URL(request.url).origin;}
+export function sameOrigin(request:NextRequest){
+ // Next may construct an internal 0.0.0.0 URL behind its dev server or Vercel proxy.
+ // Browser Origin must match the public Host, never an arbitrary forwarded host.
+ const origin=request.headers.get('origin');if(!origin)return false;
+ try{const parsed=new URL(origin);return ['http:','https:'].includes(parsed.protocol)&&parsed.host===request.headers.get('host')&&parsed.origin===origin;}catch{return false;}
+}
 const attempts=new Map<string,{count:number;until:number}>();
 export function allowLogin(request:NextRequest){
  const ip=request.headers.get('x-forwarded-for')?.split(',')[0]||'local';const now=Date.now();
