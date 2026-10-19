@@ -1,0 +1,64 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const fs=require('node:fs');
+const assert=require('node:assert/strict');
+(async()=>{
+  fs.mkdirSync('artifacts/qa',{recursive:true});
+  const browser=await chromium.launch({headless:true,channel:'msedge'});
+  const page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  for(const [route,name,selector] of [['/','home','.reference-match-card'],['/board','board','.scan-table tbody tr']]){
+    assert.equal((await page.goto('http://localhost:3000'+route)).status(),200);
+    await page.locator(selector).first().waitFor();await page.waitForTimeout(500);
+    assert.ok(await page.locator('.team-logo img').count()>2);
+    assert.equal(await page.locator('.team-logo img').evaluateAll(images=>images.some(img=>!img.complete||!img.naturalWidth)),false,'broken team logos');
+    await page.screenshot({path:`artifacts/qa/reference-${name}-desktop.png`});
+    await page.setViewportSize({width:390,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${name} overflow`);
+    await page.screenshot({path:`artifacts/qa/reference-${name}-mobile.png`,fullPage:false});
+    await page.setViewportSize({width:1440,height:1000});
+  }
+  const checkButton=page.getByRole('button',{name:/Inspect alignment for/}).first();
+  await checkButton.click();
+  await page.getByRole('dialog').waitFor();
+  assert.ok((await page.getByRole('dialog').innerText()).includes('Expert Consensus'));
+  assert.ok((await page.getByRole('dialog').innerText()).includes('Awaiting evaluation'));
+  assert.ok(!(await page.getByRole('dialog').innerText()).includes('3 / 3 verified agreement'));
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:'artifacts/qa/reference-alignment-mobile.png'});
+  await page.getByRole('button',{name:'Close alignment'}).click();
+  await page.getByLabel('Alignment filter').selectOption('aligned');
+  await page.getByRole('heading',{name:'No verified 3/3 alignments yet'}).waitFor();
+  await page.getByLabel('Alignment filter').selectOption('all');
+  await page.getByRole('button',{name:'Toggle advanced filters'}).click();
+  await page.getByLabel('Search market teams').fill('Washington');
+  assert.equal(await page.locator('.scan-table tbody tr').count(),1);
+  await page.getByLabel('Search market teams').fill('');
+  await page.getByLabel('Sport category').selectOption('Soccer');
+  assert.ok(await page.locator('.scan-table tbody tr').count()>0);
+  await page.getByLabel('Sport category').selectOption('Golf');
+  await page.getByLabel('Market',{exact:true}).selectOption('outrights');
+  assert.ok(await page.locator('.scan-table tbody tr').count()>0);
+  await page.getByLabel('Sport category').selectOption('NFL');
+  await page.getByLabel('Market',{exact:true}).selectOption('h2h');
+  await page.locator('.scan-view').first().click();
+  await page.getByRole('heading',{name:'3 Key Perspectives',exact:true}).waitFor();
+  assert.equal(await page.locator('.team-logo-large img').count(),2);
+  assert.equal(await page.locator('.team-logo-large img').evaluateAll(images=>images.some(img=>!img.complete||!img.naturalWidth)),false);
+  await page.screenshot({path:'artifacts/qa/reference-detail-mobile.png'});
+  await page.getByRole('button',{name:'Save matchup',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Remove saved matchup'}).getAttribute('aria-pressed'),'true');
+  await page.getByRole('button',{name:'Analysis',exact:true}).click();
+  await page.getByRole('heading',{name:'Market Analysis',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Overview',exact:true}).click();
+  await page.getByRole('button',{name:/Inspect alignment for/}).click();
+  await page.getByRole('dialog').waitFor();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.getByRole('dialog').count(),0);
+  for(const width of [320,390,430,1440]){
+    await page.setViewportSize({width,height:900});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`detail ${width} overflow`);
+  }
+  assert.deepEqual(errors,[]);
+  console.log('PASS: real logos loaded; compact mobile/desktop layouts; alignment inspector, missing-source guard, stale states, filters, soccer/futures, detail tabs, save toggle, Escape dismissal, 320–1440px overflow; no browser errors.');
+  await browser.close();
+})().catch(error=>{console.error(error);process.exit(1)});

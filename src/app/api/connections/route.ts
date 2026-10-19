@@ -1,0 +1,4 @@
+import {NextResponse} from 'next/server';
+import {providerHealth} from '@/lib/server/provider-http';
+export const dynamic='force-dynamic';
+export async function GET(){return NextResponse.json({odds:{configured:!!process.env.ODDS_API_KEY,...providerHealth('The Odds API')},mlbStatistics:{provider:'MLB Stats API',...providerHealth('MLB Stats API')},licensedStatistics:{configured:!!process.env.SPORTSDATAIO_API_KEY||['NFL','NBA','NHL','MLB'].some(sport=>!!process.env[`SPORTSDATAIO_${sport}_KEY`]),realDataConfirmed:process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true',...providerHealth('SportsDataIO')},ai:{configured:!!process.env.OPENAI_API_KEY&&!!process.env.OPENAI_MODEL,...providerHealth('OpenAI GCM')},expertStorage:{configured:!!process.env.DATABASE_URL},admin:{configured:(process.env.SIMLAB_ADMIN_TOKEN?.length??0)>=32}},{headers:{'Cache-Control':'no-store'}});}
