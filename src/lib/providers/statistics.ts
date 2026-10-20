@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { mlbResearch } from './mlb';
 import { nflResearch } from './nfl';
 import {ballDontLieResearch} from './balldontlie';
-import {bdlSport,bdlTeamResearchSports} from './balldontlie-sports';
+import {bdlSport,bdlEventDataSports} from './balldontlie-sports';
 import { providerJson } from '../server/provider-http';
 import type { ResearchInput } from '../research-types';
 import type { MarketEvent } from '../markets';
@@ -48,7 +48,7 @@ async function legacyStatistics(event:MarketEvent):Promise<ResearchInput>{
 
 export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
  const bdl=bdlSport(event.sport_key);
- if(!process.env.BALLDONTLIE_API_KEY||!bdl||!bdlTeamResearchSports.has(bdl))return legacyStatistics(event);
+ if(!process.env.BALLDONTLIE_API_KEY||!bdl||!bdlEventDataSports.has(bdl))return legacyStatistics(event);
  const hasPrimary=['baseball_mlb','americanfootball_nfl'].includes(event.sport_key)||Object.values(sports).some(sport=>!!keyFor(sport)&&sports[event.sport_key]===sport&&process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true');
  const [primary,extra]=await Promise.all([hasPrimary?legacyStatistics(event):Promise.resolve(null),ballDontLieResearch(event)]);
  if(primary?.status==='AVAILABLE'){

@@ -21,7 +21,7 @@ export async function bdlRequest<T>(path:string,params:URLSearchParams,validate:
    if(!response.ok){
     const status=response.status;const seconds=status===429?Math.min(3600,Math.max(60,Number(response.headers.get('retry-after'))||60)):status===401||status===403?600:30;
     denied.set(scope,{status,expires:Date.now()+seconds*1000});
-    throw new BdlError(status,status===401?'BALLDONTLIE rejected the configured key.':status===403?'This BALLDONTLIE endpoint requires access not included in the current subscription.':status===429?'BALLDONTLIE request quota reached; retry after the source cooldown.':`BALLDONTLIE could not return this resource (HTTP ${status}).`);
+    throw new BdlError(status,status===401?(account?'BALLDONTLIE rejected the configured key.':'This BALLDONTLIE sport or endpoint is not authorized for the configured key.'):status===403?'This BALLDONTLIE endpoint requires access not included in the current subscription.':status===429?'BALLDONTLIE request quota reached; retry after the source cooldown.':`BALLDONTLIE could not return this resource (HTTP ${status}).`);
    }
    const value={data:validate(await response.json()),observedAt:new Date().toISOString(),sourceUrl:url.toString()};
    for(const [id,entry] of cache)if(entry.expires<=Date.now())cache.delete(id);

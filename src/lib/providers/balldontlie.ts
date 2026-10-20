@@ -1,7 +1,7 @@
 import 'server-only';
 import {z} from 'zod';
 import {bdlAccess,bdlRequest,BdlError} from './balldontlie-http';
-import {bdlSport,bdlTeamResearchSports} from './balldontlie-sports';
+import {bdlSport,bdlEventDataSports} from './balldontlie-sports';
 import type {MarketEvent} from '../markets';
 import type {ResearchInput} from '../research-types';
 
@@ -16,7 +16,7 @@ function participant(value:unknown){
  return id!==null&&Number.isInteger(id)&&name?{id,name}:null;
 }
 function game(value:Row,sport:string){
- const id=number(value.id),season=number(value.season);const home=participant(value.home_team);const away=participant(value[sport==='mlb'||sport==='nhl'?'away_team':'visitor_team']);
+ const id=number(value.id),season=number(value.season);const home=participant(value.home_team);const away=participant(value[sport==='mlb'||sport==='nhl'||sport==='epl'?'away_team':'visitor_team']);
  const rawDate=sport==='nba'?value.datetime:sport==='nhl'?value.start_time_utc:value.date;
  const start=typeof rawDate==='string'&&/T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(rawDate)?Date.parse(rawDate):NaN;
  const state=typeof value.status_state==='string'?value.status_state:null;
@@ -31,42 +31,50 @@ const statMetrics:Record<string,string[]>={nfl:['first_downs','total_yards','yar
 export async function ballDontLieResearch(event:MarketEvent):Promise<ResearchInput>{
  const sport=bdlSport(event.sport_key);
  const input:ResearchInput={eventId:event.id,sport:event.sport_key,startTime:event.commence_time,home:event.home_team??'',away:event.away_team??'',provider:'BALLDONTLIE',providerEventId:null,retrievedAt:new Date().toISOString(),status:'INCOMPLETE',evidence:[],gaps:[],risks:[],lineupConfirmed:false,injuriesVerified:false,pregame:false};
- if(!sport||!bdlTeamResearchSports.has(sport)){input.gaps.push(`A verified BALLDONTLIE participant and performance adapter is not yet mapped for ${event.sport_key}. Other sports' statistics are never substituted.`);return input;}
+ if(!sport||!bdlEventDataSports.has(sport)){input.gaps.push(`A verified BALLDONTLIE participant and performance adapter is not yet mapped for ${event.sport_key}. Other sports' statistics are never substituted.`);return input;}
  const add=(entity:string,metric:string,value:string|number,source:{sourceUrl:string;observedAt:string},period:string)=>input.evidence.push({id:`bdl${input.evidence.length+1}`,entity,metric,value,...source,period});
  try{
-  const path=`/${sport}/v1/games`;const params=new URLSearchParams({per_page:'100'});
+  const access=await bdlAccess();
+  if(access.status==='VERIFIED'&&!access.subscriptions.some(s=>s.sport===sport||s.sport==='all_access_v3')){input.gaps.push(`The verified BALLDONTLIE account does not list ${sport.toUpperCase()} access. A subscription for another sport does not enable this feed.`);return input;}
+  const path=sport==='epl'?'/epl/v2/matches':`/${sport}/v1/games`;const params=new URLSearchParams({per_page:'100'});
+  const clubs=new Map<number,{id:number;full_name:string}>();
+  if(sport==='epl'){const teams=await bdlRequest('/epl/v2/teams',new URLSearchParams({per_page:'100'}),data=>list.parse(data));for(const r of teams.data.data){const id=number(r.id);if(id!==null&&typeof r.name==='string')clubs.set(id,{id,full_name:r.name});}if(teams.data.meta?.next_cursor)throw new BdlError(503,'The soccer team catalog is incomplete.');}
+  const parseGames=(data:unknown)=>{const parsed=list.parse(data);return sport==='epl'?{...parsed,data:parsed.data.map(r=>({...r,home_team:clubs.get(Number(r.home_team_id)),away_team:clubs.get(Number(r.away_team_id))}))}:parsed;};
   const day=Date.parse(event.commence_time);
-  for(const offset of [-1,0,1])params.append(sport==='nhl'?'dates':'dates[]',new Date(day+offset*86400000).toISOString().slice(0,10));
-  const schedule=await bdlRequest(path,params,data=>list.parse(data));
+  for(const offset of [-1,0,1])params.append(sport==='nhl'||sport==='epl'?'dates':'dates[]',new Date(day+offset*86400000).toISOString().slice(0,10));
+  const schedule=await bdlRequest(path,params,parseGames);
   const matches=schedule.data.data.map(r=>game(r,sport)).filter((g):g is Game=>!!g&&nameKey(g.home.name)===nameKey(input.home)&&nameKey(g.away.name)===nameKey(input.away)&&Math.abs(g.start-day)<=15*60000);
   if(matches.length!==1||schedule.data.meta?.next_cursor){input.gaps.push('BALLDONTLIE could not uniquely verify both participants and the exact start time in a complete event response.');return input;}
   const matched=matches[0];input.providerEventId=String(matched.id);input.pregame=matched.state==='scheduled'&&Date.now()<Math.min(day,matched.start);input.phase=input.pregame?'PREGAME':matched.state==='final'?'FINAL':matched.state==='in_progress'?'LIVE':'SUSPENDED';
   add('event','verified provider game state',matched.state,schedule,'current');
   if(!input.pregame){input.risks.push(`BALLDONTLIE game state is ${matched.state}; a new pregame evaluation is unavailable.`);return input;}
-  const recentParams=new URLSearchParams({per_page:'100'});for(const p of [matched.home,matched.away])recentParams.append('team_ids[]',String(p.id));recentParams.append(sport==='nhl'?'seasons':'seasons[]',String(matched.season));
+  const recentParams=new URLSearchParams({per_page:'100'});for(const p of [matched.home,matched.away])recentParams.append(sport==='epl'?'team_ids':'team_ids[]',String(p.id));recentParams.append(sport==='nhl'?'seasons':sport==='epl'?'season':'seasons[]',String(matched.season));
+  const windowDays=['mlb','nhl','epl'].includes(sport)?30:90;
+  if(['mlb','nhl','epl'].includes(sport)){for(let offset=0;offset<windowDays;offset++)recentParams.append(sport==='mlb'?'dates[]':'dates',new Date(Math.min(Date.now(),day)-offset*86400000).toISOString().slice(0,10));}
+  else if(sport!=='nfl'){recentParams.set('start_date',new Date(Math.min(Date.now(),day)-windowDays*86400000).toISOString().slice(0,10));recentParams.set('end_date',new Date(Math.min(Date.now(),day)).toISOString().slice(0,10));}
   const rows:Row[]=[];let lastSource=schedule;let complete=false;
   // At most one history page per explicit scan. Incomplete pagination never masquerades as full recent form.
   for(let page=0;page<1;page++){
-   const response=await bdlRequest(path,recentParams,data=>list.parse(data));rows.push(...response.data.data);lastSource=response;
+   const response=await bdlRequest(path,recentParams,parseGames);rows.push(...response.data.data);lastSource=response;
    if(response.data.meta?.next_cursor==null){complete=true;break;}recentParams.set('cursor',String(response.data.meta.next_cursor));
   }
   if(!complete)input.gaps.push('The returned game history is a bounded sample; pagination remains. No complete season or last-five claim is made.');
   const cutoff=Math.min(Date.now(),day);const unique=new Map(rows.map(r=>game(r,sport)).filter((g):g is Game=>!!g).map(g=>[g.id,g]));
-  const finals=[...unique.values()].filter(g=>g.id!==matched.id&&g.season===matched.season&&g.state==='final'&&g.start<cutoff&&g.start>=cutoff-90*86400000&&g.homeScore!==null&&g.awayScore!==null).sort((a,b)=>b.start-a.start);
+  const finals=[...unique.values()].filter(g=>g.id!==matched.id&&g.season===matched.season&&g.state==='final'&&g.start<cutoff&&g.start>=cutoff-windowDays*86400000&&g.homeScore!==null&&g.awayScore!==null).sort((a,b)=>b.start-a.start);
   const selectedGames=new Map<number,Game>();
   for(const [target,name] of [[matched.home,input.home],[matched.away,input.away]] as const){
    const games=finals.filter(g=>g.home.id===target.id||g.away.id===target.id).slice(0,5);
    if(!games.length){input.gaps.push(`No verified recent completed results for ${name} in the returned season sample.`);continue;}
-   const label=complete?'last five completed games':'returned completed-game sample';const period=`season ${matched.season}, ${games.length} games within 90 days; ${complete?'complete response':'partial history'}`;
+   const label=complete?'last five completed games':'returned completed-game sample';const period=`season ${matched.season}, ${games.length} games within ${windowDays} days; ${complete?'complete response':'partial history'}`;
    const scores=games.map(g=>g.home.id===target.id?{for:g.homeScore!,against:g.awayScore!}:{for:g.awayScore!,against:g.homeScore!});
    add(name,`${label} sample`,games.length,lastSource,period);
    add(name,`${label} wins-losses-ties`,`${scores.filter(s=>s.for>s.against).length}-${scores.filter(s=>s.for<s.against).length}-${scores.filter(s=>s.for===s.against).length}`,lastSource,period);
-   add(name,`${label} ${sport==='mlb'?'runs':sport==='nhl'?'goals':'points'} per game`,Number((scores.reduce((sum,s)=>sum+s.for,0)/games.length).toFixed(2)),lastSource,period);
-   add(name,`${label} opponent ${sport==='mlb'?'runs':sport==='nhl'?'goals':'points'} per game`,Number((scores.reduce((sum,s)=>sum+s.against,0)/games.length).toFixed(2)),lastSource,period);
+   add(name,`${label} ${sport==='mlb'?'runs':sport==='nhl'||sport==='epl'?'goals':'points'} per game`,Number((scores.reduce((sum,s)=>sum+s.for,0)/games.length).toFixed(2)),lastSource,period);
+   add(name,`${label} opponent ${sport==='mlb'?'runs':sport==='nhl'||sport==='epl'?'goals':'points'} per game`,Number((scores.reduce((sum,s)=>sum+s.against,0)/games.length).toFixed(2)),lastSource,period);
    if(complete)add(name,'full rest days since last completed game',Math.max(0,Math.floor((day-games[0].start)/86400000)-1),lastSource,'schedule');
    for(const g of games)selectedGames.set(g.id,g);
   }
-  const access=await bdlAccess();const subscription=access.subscriptions.find(s=>s.sport===sport||s.sport==='all_access_v3');
+  const subscription=access.subscriptions.find(s=>s.sport===sport||s.sport==='all_access_v3');
   const paid=subscription&&subscription.tier!=='free'&&(!subscription.status||['active','trialing'].includes(subscription.status));
   if(paid&&statMetrics[sport]&&selectedGames.size){
    try{
@@ -92,6 +100,7 @@ export async function ballDontLieResearch(event:MarketEvent):Promise<ResearchInp
     if(reports.data.meta?.next_cursor)input.gaps.push('The injury response is paginated and does not establish comprehensive injury coverage.');
    }catch(error){input.gaps.push(error instanceof BdlError?error.message:'Current injury reporting could not be validated.');}
   }
+  if(sport==='epl')input.gaps.push('Soccer three-way markets require draw-aware research and calibration; binary team approval is not applied.');
   input.gaps.push('Final starters/lineups, comprehensive availability and workload clearance, sport-specific advanced matchup factors and a reviewed calibrated probability model remain required for green approval. Basic endpoint access is not full statistical coverage.');
   input.status=[input.home,input.away].every(name=>input.evidence.filter(e=>e.entity===name).length>=3)?'AVAILABLE':'INCOMPLETE';
  }catch(error){input.status=error instanceof BdlError&&error.status===403?'INCOMPLETE':'ERROR';input.gaps.push(error instanceof BdlError?error.message:'BALLDONTLIE research could not be validated.');}

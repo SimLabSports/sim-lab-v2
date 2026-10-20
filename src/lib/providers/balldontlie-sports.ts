@@ -7,7 +7,8 @@ export const bdlSports:Record<string,string>={
  mma_mixed_martial_arts:'mma',golf_pga_championship_winner:'pga',golf_masters_tournament_winner:'pga',golf_the_open_championship_winner:'pga',golf_us_open_winner:'pga',
 };
 export const bdlTeamResearchSports=new Set(['nba','nfl','mlb','nhl','wnba','ncaaf','ncaab','ncaaw']);
+export const bdlEventDataSports=new Set([...bdlTeamResearchSports,'epl']);
 export function bdlSport(key:string){return bdlSports[key]??(key.startsWith('tennis_atp_')?'atp':key.startsWith('tennis_wta_')?'wta':null);}
 export function bdlCoverage(key:string){
- const sport=bdlSport(key);return {sport,adapter:sport&&bdlTeamResearchSports.has(sport)?'TEAM_RESEARCH':sport?'EVENT_SCHEMA_REQUIRED':'NOT_OFFERED',reason:!sport?'This league has no verified BALLDONTLIE mapping. It needs another statistics source.':bdlTeamResearchSports.has(sport)?'Exact event, completed-game form and permitted statistics; endpoint access is checked on request.':'Provider catalog mapping exists; a verified competition/participant-specific research adapter is still required. Binary team rules are not reused for this sport.'};
+ const sport=bdlSport(key);return {sport,adapter:sport&&bdlTeamResearchSports.has(sport)?'TEAM_RESEARCH':sport==='epl'?'SOCCER_DATA_ONLY':sport?'EVENT_SCHEMA_REQUIRED':'NOT_OFFERED',reason:!sport?'This league has no verified BALLDONTLIE mapping. It needs another statistics source.':bdlTeamResearchSports.has(sport)?'Exact event, completed-game form and permitted statistics; endpoint access is checked on request.':'Provider catalog mapping exists; a verified competition/participant-specific research adapter is still required. Binary team rules are not reused for this sport.'};
 }
