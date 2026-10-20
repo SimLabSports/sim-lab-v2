@@ -2,6 +2,7 @@ import 'server-only';
 import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {getStatistics} from '../providers/statistics';
+import {bdlSport,bdlTeamResearchSports} from '../providers/balldontlie-sports';
 import {database,databaseFailure} from '../server/database';
 import {providerSucceeded,providerFailed} from '../server/provider-http';
 import {openAiFailure} from './openai-errors';
@@ -10,7 +11,7 @@ import {admitScan} from './scan-budget';
 import {GREEN_CHECK_RESEARCH_INSTRUCTIONS} from './green-check-instructions';
 import type {GcmEvaluation,ResearchInput} from '../research-types';
 import type {MarketEvent,MarketKey} from '../markets';
-const version='gcm-grounded-research-3';
+const version='gcm-grounded-research-4';
 const sideSchema=z.object({selection:z.string(),supportingEvidenceIds:z.array(z.string()).max(12),counterEvidenceIds:z.array(z.string()).max(12)}).strict();
 const decisionSchema=z.object({selection:z.string().nullable(),assessments:z.array(sideSchema).length(2),riskIndices:z.array(z.number().int().min(0)).max(30)}).strict();
 const busy=new Map<string,Promise<GcmEvaluation>>();
@@ -39,7 +40,7 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   if(!process.env.OPENAI_API_KEY||!process.env.OPENAI_MODEL){evaluation.explanation='Real statistics retrieved. Configure OPENAI_API_KEY and OPENAI_MODEL for server-side GCM research interpretation.';return save(evaluation);}
   if(!process.env.DATABASE_URL){evaluation.explanation='Real statistics retrieved. Configure DATABASE_URL and apply the migration before publishing auditable AI evaluations.';return evaluation;}
   // Partial verified statistics can support qualitative research; they cannot pass approval gates.
-  if(!['baseball_mlb','americanfootball_nfl','basketball_nba','icehockey_nhl'].includes(event.sport_key)||key!=='h2h'){evaluation.explanation=`Verified GCM research features are not mapped for ${event.sport_key} / ${key}. Moneyline research is never transferred to spread, total or futures markets.`;return save(evaluation);}
+  if(!(['baseball_mlb','americanfootball_nfl','basketball_nba','icehockey_nhl'].includes(event.sport_key)||bdlTeamResearchSports.has(bdlSport(event.sport_key)??''))||key!=='h2h'){evaluation.explanation=`Verified GCM research features are not mapped for ${event.sport_key} / ${key}. Moneyline research is never transferred to spread, total or futures markets.`;return save(evaluation);}
   const allowedIds=new Set(input.evidence.map(item=>item.id));
   const risks=[...input.risks,...input.gaps];
   const evidenceIds={type:'array',maxItems:12,items:{type:'string',enum:[...allowedIds]}};

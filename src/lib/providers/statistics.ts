@@ -2,13 +2,15 @@ import 'server-only';
 import { z } from 'zod';
 import { mlbResearch } from './mlb';
 import { nflResearch } from './nfl';
+import {ballDontLieResearch} from './balldontlie';
+import {bdlSport,bdlTeamResearchSports} from './balldontlie-sports';
 import { providerJson } from '../server/provider-http';
 import type { ResearchInput } from '../research-types';
 import type { MarketEvent } from '../markets';
 // These documented feeds are real APIs. No endpoint is treated as connected before a successful response.
 const sports:Record<string,string>={americanfootball_nfl:'nfl',basketball_nba:'nba',icehockey_nhl:'nhl',baseball_mlb:'mlb'};
 const keyFor=(sport:string)=>process.env[`SPORTSDATAIO_${sport.toUpperCase()}_KEY`]||process.env.SPORTSDATAIO_API_KEY;
-export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
+async function legacyStatistics(event:MarketEvent):Promise<ResearchInput>{
  if(event.sport_key==='baseball_mlb'&&!keyFor('mlb'))return mlbResearch(event);
  if(event.sport_key==='americanfootball_nfl'&&(!keyFor('nfl')||process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED!=='true'))return nflResearch(event);
  const sport=sports[event.sport_key];
@@ -42,4 +44,17 @@ export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
   // Quantitative and featured approval remain disabled until the sport-specific minimum inputs exist.
  }catch(error){result.status='ERROR';result.gaps.push(error instanceof Error?error.message:'Statistics provider failed.');}
  return result;
+}
+
+export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
+ const bdl=bdlSport(event.sport_key);
+ if(!process.env.BALLDONTLIE_API_KEY||!bdl||!bdlTeamResearchSports.has(bdl))return legacyStatistics(event);
+ const hasPrimary=['baseball_mlb','americanfootball_nfl'].includes(event.sport_key)||Object.values(sports).some(sport=>!!keyFor(sport)&&sports[event.sport_key]===sport&&process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true');
+ const [primary,extra]=await Promise.all([hasPrimary?legacyStatistics(event):Promise.resolve(null),ballDontLieResearch(event)]);
+ if(primary?.status==='AVAILABLE'){
+  if(extra.status!=='AVAILABLE')return {...primary,gaps:[...primary.gaps,...extra.gaps.map(g=>'BALLDONTLIE: '+g)]};
+  if(!primary.pregame||!extra.pregame)return {...primary,pregame:false,gaps:[...primary.gaps,'Providers do not both confirm scheduled pregame state.']};
+  return {...primary,provider:primary.provider+' + BALLDONTLIE',evidence:[...primary.evidence,...extra.evidence],gaps:[...new Set([...primary.gaps,...extra.gaps])],risks:[...new Set([...primary.risks,...extra.risks])]};
+ }
+ return extra.status==='AVAILABLE'?extra:primary?.evidence.length?{...primary,gaps:[...primary.gaps,...extra.gaps]}:extra;
 }
