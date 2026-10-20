@@ -7,17 +7,17 @@ import {database,databaseFailure} from '../server/database';
 import {providerSucceeded,providerFailed} from '../server/provider-http';
 import {openAiFailure} from './openai-errors';
 import {withApproval} from './decision-server';
-import {admitScan} from './scan-budget';
+import {admitScan,ScanAdmissionError} from './scan-budget';
 import {GREEN_CHECK_RESEARCH_INSTRUCTIONS} from './green-check-instructions';
 import type {GcmEvaluation,ResearchInput} from '../research-types';
 import type {MarketEvent,MarketKey} from '../markets';
-const version='gcm-grounded-research-6';
+const version='gcm-grounded-research-7';
 const sideSchema=z.object({selection:z.string(),supportingEvidenceIds:z.array(z.string()).max(12),counterEvidenceIds:z.array(z.string()).max(12)}).strict();
 const decisionSchema=z.object({selection:z.string().nullable(),assessments:z.array(sideSchema).min(2).max(3),riskIndices:z.array(z.number().int().min(0)).max(30)}).strict();
 const busy=new Map<string,Promise<GcmEvaluation>>();
 function incomplete(event:MarketEvent,key:MarketKey,line:number|null,input:ResearchInput,reason:string):GcmEvaluation{return {id:randomUUID(),eventId:event.id,sport:event.sport_key,market:key,line,selection:null,status:input.status==='ERROR'?'ERROR':'INCOMPLETE',probability:null,edgePp:null,uncertainty:null,explanation:reason,factors:[],risks:[...input.risks,...input.gaps],modelVersion:version,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+300000).toISOString(),eligibleForAlignment:false,eligibleForFeatured:false,provider:input.provider,input};}
 export async function storedGcm(event:MarketEvent,key:MarketKey,line:number|null):Promise<GcmEvaluation|null>{
- try{const result=await database().query<{record:GcmEvaluation}>('SELECT record FROM gcm_evaluations WHERE event_id=$1 AND sport=$2 AND market=$3 AND expires_at>now() ORDER BY created_at DESC LIMIT 20',[event.id,event.sport_key,key]);return result.rows.map(row=>row.record).find(row=>row.line===line&&row.input.startTime===event.commence_time&&row.modelVersion.startsWith(version))??null;}catch{return null;}
+ try{const result=await database().query<{record:GcmEvaluation}>('SELECT record FROM gcm_evaluations WHERE event_id=$1 AND sport=$2 AND market=$3 AND expires_at>now() ORDER BY created_at DESC LIMIT 20',[event.id,event.sport_key,key]);return result.rows.map(row=>row.record).find(row=>row.line===line&&row.input.startTime===event.commence_time&&row.modelVersion.startsWith(version)&&! ['GCM_SCAN_LIMIT','GCM_SCAN_BUSY'].includes(row.errorCode??''))??null;}catch{return null;}
 }
 async function record(evaluation:GcmEvaluation){
  const client=await database().connect();
@@ -48,10 +48,8 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   const evidenceIds={type:'array',maxItems:12,items:{type:'string',enum:[...allowedIds]}};
   const schema={type:'object',properties:{selection:{type:['string','null'],enum:[...selections,null]},assessments:{type:'array',minItems:selections.length,maxItems:selections.length,items:{type:'object',properties:{selection:{type:'string',enum:selections},supportingEvidenceIds:evidenceIds,counterEvidenceIds:evidenceIds},required:['selection','supportingEvidenceIds','counterEvidenceIds'],additionalProperties:false}},riskIndices:{type:'array',maxItems:30,items:{type:'integer',minimum:0}}},required:['selection','assessments','riskIndices'],additionalProperties:false};
   try{await admitScan(`${identity}:${event.commence_time}`,visitor);}catch(error){
-   const message=error instanceof Error?error.message:'';
-   const busy=message.startsWith('This matchup');const limited=message.startsWith('The research scan limit');
-   const reason=busy||limited?{code:busy?'GCM_SCAN_BUSY':'GCM_SCAN_LIMIT',message}:databaseFailure(error);
-   return save({...evaluation,status:'ERROR',errorCode:reason.code,explanation:`Research scan admission: ${reason.message}`,expiresAt:new Date(Date.now()+90000).toISOString()});
+   if(error instanceof ScanAdmissionError)return {...evaluation,status:'ERROR',errorCode:error.quota.scope==='MATCHUP_BUSY'?'GCM_SCAN_BUSY':'GCM_SCAN_LIMIT',scanQuota:error.quota,explanation:error.message,expiresAt:new Date(Math.min(Date.now()+90000,Date.parse(error.quota.resetsAt))).toISOString()};
+   const reason=databaseFailure(error);return {...evaluation,status:'ERROR',errorCode:reason.code,explanation:`Research scan admission: ${reason.message}`};
   }
   try{
    const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},cache:'no-store',signal:AbortSignal.timeout(45000),body:JSON.stringify({model:process.env.OPENAI_MODEL,store:false,max_output_tokens:1800,instructions:GREEN_CHECK_RESEARCH_INSTRUCTIONS,input:JSON.stringify({event:{sport:event.sport_key,family:profile.family,home:input.home,away:input.away,start:input.startTime,market:key,outcomeStructure:profile.family==='soccer'?'THREE_WAY_WITH_DRAW':'SETTLEMENT_REQUIRES_VERIFICATION'},requiredAssessments:selections,requiredSportFeatures:profile.required,evidence:input.evidence,risks}),text:{format:{type:'json_schema',name:'gcm_grounded_research',strict:true,schema}}})});

@@ -1,5 +1,7 @@
 # Sim Lab multi-sport coverage and implementation
 
+Subsequent NBA update: [NBA GCM operational repair and audited probability baseline](nba-gcm-repair.md). The snapshot counts below predate that repair; the runtime inventory reports the current deployed models.
+
 Audit: October 20, 2026. Exact machine-readable receipts are in `data/multisport-source-audit.json` and `data/multisport-history-audit.json`. Counts are snapshots, not promises about the next provider response. `/api/statistics/coverage` combines those receipts with the current catalog, credential presence, latest saved GCM evaluations and reviewed model inventory. A worker's empty cache is explicitly NOT_FETCHED, not a disconnected league.
 
 ## Shared architecture

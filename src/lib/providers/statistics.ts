@@ -8,6 +8,7 @@ import {sportProfile} from '../sport-profiles';
 import {eventIdentity} from '../event-identity';
 import {espnTeamResearch} from './espn-team';
 import {espnIndividualResearch} from './espn-individual';
+import {enrichNba} from './nba-official';
 import { providerJson } from '../server/provider-http';
 import type { ResearchInput } from '../research-types';
 import type { MarketEvent } from '../markets';
@@ -53,7 +54,8 @@ async function legacyStatistics(event:MarketEvent):Promise<ResearchInput>{
 export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
  const profile=sportProfile(event.sport_key),bdl=bdlSport(event.sport_key);
  const licensed=!!sports[event.sport_key]&&!!keyFor(sports[event.sport_key])&&process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true';
- const primary=['baseball_mlb','americanfootball_nfl'].includes(event.sport_key)||licensed?legacyStatistics(event):profile?.research==='TEAM'?espnTeamResearch(event):espnIndividualResearch(event);
+ const basePrimary=['baseball_mlb','americanfootball_nfl'].includes(event.sport_key)||licensed?legacyStatistics(event):profile?.research==='TEAM'?espnTeamResearch(event):espnIndividualResearch(event);
+ const primary=event.sport_key==='basketball_nba'?basePrimary.then(input=>enrichNba(event,input)):basePrimary;
  const requests=[primary];if(process.env.BALLDONTLIE_API_KEY&&bdl&&bdlEventDataSports.has(bdl))requests.push(ballDontLieResearch(event));
  const settled=await Promise.allSettled(requests);const packets=settled.flatMap(p=>p.status==='fulfilled'?[p.value]:[]);
  if(!packets.length)throw new Error('No sport-specific statistics provider completed this request.');

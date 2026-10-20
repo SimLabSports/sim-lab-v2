@@ -46,7 +46,7 @@ export function AlignmentInspector({event,marketKey='h2h',large=false}:{event:Ma
   const evaluation=evaluateMarketAlignment(scan.event,marketKey,now);
   const icons=[BarChart3,Users,Activity];
   return <>
-    <button className={`alignment-trigger ${large?'alignment-trigger-large':''}`} onClick={()=>{dialog.current?.showModal();void scan.run();}} aria-label={`Inspect alignment for ${eventTitle(event)}`}>
+    <button className={`alignment-trigger ${large?'alignment-trigger-large':''}`} onClick={()=>{dialog.current?.showModal();}} aria-label={`Inspect alignment for ${eventTitle(event)}`}>
       <span className="source-checks">{evaluation.perspectives.map(p=><span key={p.key} className={p.available?(p.stale?'source-stale':p.selection===evaluation.selection?'available':''):''}>{p.available&&!p.stale&&p.selection===evaluation.selection?<Check size={large?21:13} strokeWidth={3}/>:<Minus size={large?19:12}/>}</span>)}</span>
       <span className="alignment-count">{evaluation.evaluated}/3 <span>{evaluation.status==='INCOMPLETE'?'incomplete':'agree'}</span></span>
     </button>

@@ -168,5 +168,195 @@
       "reviewedAt": "2026-10-20T20:39:03.234Z",
       "expiresAt": "2026-11-19T20:38:25.280Z"
     }
+  },
+  {
+    "kind": "WIN_LOGISTIC",
+    "id": "nba-official-rolling-efficiency",
+    "version": "1",
+    "sport": "basketball_nba",
+    "market": "h2h",
+    "phase": "PREGAME",
+    "targetDefinition": "homeWin",
+    "features": [
+      {
+        "metric": "NBA weighted estimated offensive rating",
+        "group": "EFFICIENCY",
+        "direction": 1,
+        "minimumValue": 94.346,
+        "maximumValue": 126.85
+      },
+      {
+        "metric": "NBA weighted estimated defensive rating",
+        "group": "MATCHUP",
+        "direction": -1,
+        "minimumValue": 96.067,
+        "maximumValue": 122.885
+      },
+      {
+        "metric": "NBA weighted scoring margin",
+        "group": "RECENT_FORM",
+        "direction": 0,
+        "minimumValue": -21.332,
+        "maximumValue": 18.114
+      },
+      {
+        "metric": "NBA weighted margin deviation",
+        "group": "CONSISTENCY",
+        "direction": -1,
+        "minimumValue": 6.286,
+        "maximumValue": 29.918
+      },
+      {
+        "metric": "NBA retained completed sample",
+        "group": "SAMPLE",
+        "direction": 0,
+        "minimumValue": 10,
+        "maximumValue": 20,
+        "minimumSample": 10
+      },
+      {
+        "metric": "NBA capped schedule rest days",
+        "group": "CONTEXT",
+        "direction": 0,
+        "minimumValue": 0,
+        "maximumValue": 14
+      },
+      {
+        "metric": "NBA current-season weight share",
+        "group": "CONTEXT",
+        "direction": 0,
+        "minimumValue": 0,
+        "maximumValue": 1
+      },
+      {
+        "metric": "NBA weighted estimated possessions",
+        "group": "CONTEXT",
+        "direction": 0,
+        "minimumValue": 93.818,
+        "maximumValue": 109.132
+      }
+    ],
+    "fit": {
+      "weights": [
+        0.2469512696223082,
+        0.25370397269012573,
+        -0.1627372711218669,
+        0.3056134451667351,
+        0.09926583148700167,
+        -0.014280792205414772,
+        0.06978662999996592,
+        -0.09517245646350701,
+        -0.07475532817556005
+      ],
+      "mean": [
+        -0.14641878654586973,
+        -0.004167586948761342,
+        -0.14586453097741137,
+        -0.12871467452392568,
+        -0.005094820266062836,
+        0.011604868383809794,
+        -0.00011567109692815566,
+        -0.015146472776009768
+      ],
+      "scale": [
+        5.675157411115062,
+        5.2671770619595115,
+        8.278647571370822,
+        3.7068252189747044,
+        0.22058531434433695,
+        1.0544910492190749,
+        0.016830895411150768,
+        3.056714765240071
+      ]
+    },
+    "calibrator": {
+      "weights": [
+        0.2046544536832286,
+        0.8014673348409892
+      ],
+      "mean": [
+        0.252758096338806
+      ],
+      "scale": [
+        0.7654341113935939
+      ]
+    },
+    "minimumAdvantages": 3,
+    "minimumBinSample": 50,
+    "training": {
+      "train": 3533,
+      "calibration": 1224,
+      "holdout": 1224,
+      "trainBefore": "2024-07-01T00:00:00.000Z",
+      "calibrationBefore": "2025-07-01T00:00:00.000Z",
+      "settledThrough": "2026-04-13T04:05:51.000Z",
+      "inputSha256": "235ebe135bd2398e00090954d42591000d356b2fcf6a2cbe4b725b872bea64c2"
+    },
+    "holdout": {
+      "brier": 0.20882357584202982,
+      "logLoss": 0.6056400605141036,
+      "calibrationError": 0.02181912085400535,
+      "bins": [
+        {
+          "count": 0,
+          "meanProbability": null,
+          "observedFrequency": null
+        },
+        {
+          "count": 28,
+          "meanProbability": 0.16889315355613962,
+          "observedFrequency": 0.17857142857142858
+        },
+        {
+          "count": 99,
+          "meanProbability": 0.25077692948273544,
+          "observedFrequency": 0.20202020202020202
+        },
+        {
+          "count": 142,
+          "meanProbability": 0.3527706625618854,
+          "observedFrequency": 0.3591549295774648
+        },
+        {
+          "count": 232,
+          "meanProbability": 0.45524721663350637,
+          "observedFrequency": 0.4396551724137931
+        },
+        {
+          "count": 238,
+          "meanProbability": 0.5499960728522013,
+          "observedFrequency": 0.5840336134453782
+        },
+        {
+          "count": 210,
+          "meanProbability": 0.6476966012470993,
+          "observedFrequency": 0.6666666666666666
+        },
+        {
+          "count": 159,
+          "meanProbability": 0.7479051878026381,
+          "observedFrequency": 0.7672955974842768
+        },
+        {
+          "count": 111,
+          "meanProbability": 0.8424528022097401,
+          "observedFrequency": 0.8558558558558559
+        },
+        {
+          "count": 5,
+          "meanProbability": 0.9141372924973498,
+          "observedFrequency": 1
+        }
+      ],
+      "baselineBrier": 0.24700504224506148,
+      "baselineLogLoss": 0.6871452705516351
+    },
+    "review": {
+      "approved": true,
+      "reviewer": "Codex reproducible source, chronology and holdout audit; not an external human endorsement",
+      "reference": "https://github.com/SimLabSports/sim-lab-v2/blob/main/docs/nba-gcm-repair.md",
+      "reviewedAt": "2026-10-20T22:13:15.273Z",
+      "expiresAt": "2026-11-19T22:11:44.305Z"
+    }
   }
 ]

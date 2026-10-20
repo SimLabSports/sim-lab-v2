@@ -1,0 +1,236 @@
+{
+  "createdAt": "2026-10-20T22:11:44.296Z",
+  "sourceGames": 6138,
+  "excluded": 157,
+  "counts": {
+    "train": 3533,
+    "calibration": 1224,
+    "holdout": 1224
+  },
+  "holdout": {
+    "brier": 0.20882357584202982,
+    "logLoss": 0.6056400605141036,
+    "calibrationError": 0.02181912085400535,
+    "bins": [
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 28,
+        "meanProbability": 0.16889315355613962,
+        "observedFrequency": 0.17857142857142858
+      },
+      {
+        "count": 99,
+        "meanProbability": 0.25077692948273544,
+        "observedFrequency": 0.20202020202020202
+      },
+      {
+        "count": 142,
+        "meanProbability": 0.3527706625618854,
+        "observedFrequency": 0.3591549295774648
+      },
+      {
+        "count": 232,
+        "meanProbability": 0.45524721663350637,
+        "observedFrequency": 0.4396551724137931
+      },
+      {
+        "count": 238,
+        "meanProbability": 0.5499960728522013,
+        "observedFrequency": 0.5840336134453782
+      },
+      {
+        "count": 210,
+        "meanProbability": 0.6476966012470993,
+        "observedFrequency": 0.6666666666666666
+      },
+      {
+        "count": 159,
+        "meanProbability": 0.7479051878026381,
+        "observedFrequency": 0.7672955974842768
+      },
+      {
+        "count": 111,
+        "meanProbability": 0.8424528022097401,
+        "observedFrequency": 0.8558558558558559
+      },
+      {
+        "count": 5,
+        "meanProbability": 0.9141372924973498,
+        "observedFrequency": 1
+      }
+    ]
+  },
+  "baseline": {
+    "brier": 0.24700504224506148,
+    "logLoss": 0.6871452705516351,
+    "calibrationError": 0.0011629380500313147,
+    "bins": [
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 1224,
+        "meanProbability": 0.5559015001415346,
+        "observedFrequency": 0.5547385620915033
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      }
+    ]
+  },
+  "weeklyBlocks": 26,
+  "weeklyBootstrapBrierImprovement95": [
+    0.02628516266533572,
+    0.05060970086781884
+  ],
+  "passes": true,
+  "limitations": [
+    "Scoring/estimated-possession baseline; no historical injury or lineup predictor.",
+    "Pregame replay at 10 minutes before official first-period start; previous stats enter only 60 minutes after verified game-end UTC. Derived availability bounds are not archived pregame observations.",
+    "Previous-season games carry 0.35 per-game relative weight and 10-game recency half-life, identically in training and live extraction.",
+    "Estimated possessions use both box scores: mean(FGA+0.44*FTA-OREB+TOV); these are not branded official per-game possession ratings.",
+    "No sportsbook or expert data, ROI claim, future injury clearance, or automatic GCM approval."
+  ],
+  "audit": {
+    "reviewedAt": "2026-10-20T22:12:40.185Z",
+    "independentFeatureChecks": 40,
+    "sourceChecks": [
+      {
+        "gameId": "0022100001",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022100001.json",
+        "sha256": "d0d40c6ef83b2b56552b0e381891130fedfc945a4a33d6032e8dffe79e156b5f",
+        "firstPeriodStart": "2021-10-19T23:37:02.0Z",
+        "gameEnd": "2021-10-20T01:57:18.5Z",
+        "homePoints": 127,
+        "awayPoints": 104
+      },
+      {
+        "gameId": "0022100690",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022100690.json",
+        "sha256": "7ae841beb55643b527232ce52e5ac4cda1ed55dadebf6cc5a8a5248eb5a51b84",
+        "firstPeriodStart": "2022-01-22T01:15:43.2Z",
+        "gameEnd": "2022-01-22T03:47:10.7Z",
+        "homePoints": 94,
+        "awayPoints": 90
+      },
+      {
+        "gameId": "0022200134",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022200134.json",
+        "sha256": "70906af5d39b76caad1465bd74756b0a334d7d8ec97fc30f2de75dd46d8a6124",
+        "firstPeriodStart": "2022-11-05T23:40:36.3Z",
+        "gameEnd": "2022-11-06T02:12:45.5Z",
+        "homePoints": 124,
+        "awayPoints": 121
+      },
+      {
+        "gameId": "0022200817",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022200817.json",
+        "sha256": "21336b671cc792b0dc0e4bdabd4dc6a1897d9ed73261a831e4d79f13a57d6024",
+        "firstPeriodStart": "2023-02-08T00:32:41.7Z",
+        "gameEnd": "2023-02-08T03:00:26.6Z",
+        "homePoints": 112,
+        "awayPoints": 116
+      },
+      {
+        "gameId": "0022300267",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022300267.json",
+        "sha256": "893cedc7c0fe844b0580283fbd233ff74a0595c774f6a58c586bac42ee7726f1",
+        "firstPeriodStart": "2023-12-01T00:42:53.6Z",
+        "gameEnd": "2023-12-01T03:16:06.4Z",
+        "homePoints": 142,
+        "awayPoints": 132
+      },
+      {
+        "gameId": "0022300920",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022300920.json",
+        "sha256": "48c8af578315172621a21a18ae532654f0803420a435974b6b0032699015d47c",
+        "firstPeriodStart": "2024-03-10T01:41:14.1Z",
+        "gameEnd": "2024-03-10T03:53:03.5Z",
+        "homePoints": 107,
+        "awayPoints": 117
+      },
+      {
+        "gameId": "0022400376",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022400376.json",
+        "sha256": "ebbc85d430440d9e44e7da0db1bd43ccc4f10e7e6178bb7ea45c641e204ea5d1",
+        "firstPeriodStart": "2024-12-21T23:10:13.9Z",
+        "gameEnd": "2024-12-22T01:29:09.1Z",
+        "homePoints": 99,
+        "awayPoints": 103
+      },
+      {
+        "gameId": "0022401059",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022401059.json",
+        "sha256": "29d642e8df2658502d316efd82c3ab563c198c8a6a1f3b08764fbcd38df385b5",
+        "firstPeriodStart": "2025-03-27T23:10:57.0Z",
+        "gameEnd": "2025-03-28T01:31:53.2Z",
+        "homePoints": 124,
+        "awayPoints": 116
+      },
+      {
+        "gameId": "0022500519",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022500519.json",
+        "sha256": "bcf47eadc7fb484ed66ee2e2b2a347983d0956b2a2ed3c109af16be18d669f9e",
+        "firstPeriodStart": "2026-01-08T00:40:29.0Z",
+        "gameEnd": "2026-01-08T02:52:10.0Z",
+        "homePoints": 117,
+        "awayPoints": 100
+      },
+      {
+        "gameId": "0022501200",
+        "sourceUrl": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_0022501200.json",
+        "sha256": "be14a96b4c501bf4121c1496ff1dabf0db6a01bb697c778e3e78d3026dc9f5e0",
+        "firstPeriodStart": "2026-04-13T00:43:21.2Z",
+        "gameEnd": "2026-04-13T02:50:18.3Z",
+        "homePoints": 122,
+        "awayPoints": 110
+      }
+    ],
+    "sourceGameCount": 6138,
+    "inputSha256": "235ebe135bd2398e00090954d42591000d356b2fcf6a2cbe4b725b872bea64c2",
+    "passes": true
+  }
+}

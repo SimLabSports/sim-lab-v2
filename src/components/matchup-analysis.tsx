@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Activity, ArrowLeft, BarChart3, ChevronDown, Info, ShieldCheck, Star, Users } from 'lucide-react';
 import {GcmDecision} from './gcm-decision';
 import {useGcmScan} from './use-gcm-scan';
@@ -19,18 +19,6 @@ export function MatchupAnalysis({event:initialEvent,feed,mode}:{event:MarketEven
   const rawEvent=current??(error?{...initialEvent,bookmakers:[],intelligence:undefined}:initialEvent);
   const scan=useGcmScan(rawEvent,marketKey);
   const event=scan.event;
-  // A matchup detail page is an explicit research view. Run once per selected
-  // pregame event/market, never during passive board refreshes or polling.
-  // The server enforces provider, quota and duplicate-request controls.
-  const firstScanKeys=useRef(new Set<string>());
-  const scanKey=`${rawEvent.sport_key}:${rawEvent.id}:${marketKey}`;
-  useEffect(()=>{
-    if(firstScanKeys.current.has(scanKey))return;
-    if(Date.now()>=Date.parse(rawEvent.commence_time))return;
-    if(!getMarket(rawEvent,marketKey)?.outcomes.length)return;
-    firstScanKeys.current.add(scanKey);
-    void scan.run();
-  },[scanKey,rawEvent.commence_time,rawEvent,marketKey,scan.run]);
   const evaluation=evaluateMarketAlignment(event,marketKey);
   const market=getMarket(event,marketKey);
   const away=event.away_team||feed.title;const home=event.home_team;
