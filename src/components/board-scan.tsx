@@ -35,6 +35,7 @@ export function BoardScan({initialCategory='NFL',requestedScan=false}:{initialCa
     // Feed polling may rerender the board while a scan is running; it must not cancel that batch.
     const timer=setTimeout(()=>{
       if(scanStarted.current||!mounted.current)return;scanStarted.current=true;
+      if(!candidates.length){setScanError('No priced pregame events are available in this view. GCM research remains available on supported matchup pages; approval also requires a current price.');return;}
       void(async()=>{for(let i=0;i<candidates.length;i++){if(!mounted.current)return;if(scanContext.current!==context)break;setScanProgress(`Scanning ${i+1}/${candidates.length}`);try{await runGcmScan(candidates[i].event,marketKey);}catch(error){if(mounted.current)setScanError(error instanceof Error?error.message:'Research could not be completed.');break;}}if(mounted.current){setScanProgress('');reload();}})();
     },0);
     return()=>clearTimeout(timer);

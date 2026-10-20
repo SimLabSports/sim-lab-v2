@@ -66,7 +66,8 @@ export function evaluateMarketAlignment(event:MarketEvent,key:MarketKey='h2h',no
       gcm={...gcm,status:'INCOMPLETE',eligibleForAlignment:false,eligibleForFeatured:false,probability:null,edgePp:null,uncertainty:null,explanation:reason,approval:{...gcm.approval,approved:false,status:'INCOMPLETE',grade:null,category:null,reasons:[reason],candidates:gcm.approval.candidates.map(c=>({...c,approved:false,status:'INCOMPLETE',grade:null,category:null,gates:[...c.gates,{key:'expired',status:'MISSING',reason}],reasons:[reason]}))}};
     }
     const perspectives=published.perspectives.map(p=>({...p,available:p.key==='method'?p.available&&gcm?.status==='APPROVED'&&gcm.approval?.approved===true:p.available,stale:p.key==='market'?stale:p.key==='expert'?p.stale||now>=Date.parse(event.commence_time)||!!published.experts?.sources.some(source=>now>=Date.parse(source.expiresAt)):p.stale||!!gcm&&now>=Date.parse(gcm.approval?.expiresAt??gcm.expiresAt)}));
-    return {...published,gcm,stale,perspectives,evaluated:perspectives.filter(p=>p.available&&!p.stale&&!!published.selection&&p.selection===published.selection).length,status:perspectives.every(p=>p.available&&!p.stale)?'EVALUATED':'INCOMPLETE',aligned:hasVerifiedAlignment(perspectives)};
+    const metricsFresh=!stale&&!!gcm&&now<Date.parse(gcm.approval?.expiresAt??gcm.expiresAt)&&now<Date.parse(gcm.expiresAt)&&(gcm.input.phase==='LIVE'||now<Date.parse(event.commence_time));
+    return {...published,gcm,stale,perspectives,probability:metricsFresh?published.probability??null:null,edgePp:metricsFresh?published.edgePp??null:null,evaluated:perspectives.filter(p=>p.available&&!p.stale&&!!published.selection&&p.selection===published.selection).length,status:perspectives.every(p=>p.available&&!p.stale)?'EVALUATED':'INCOMPLETE',aligned:hasVerifiedAlignment(perspectives)};
   }
   const market=getMarket(event,key);
   const selection=marketFavorite(market);
