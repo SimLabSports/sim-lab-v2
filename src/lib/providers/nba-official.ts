@@ -26,7 +26,7 @@ export async function nbaTable(endpoint:'leaguedashteamstats'|'leaguedashplayers
 export async function enrichNba(event:MarketEvent,input:ResearchInput):Promise<ResearchInput>{
  if(event.sport_key!=='basketball_nba'||!input.providerEventId||!input.pregame)return input;
  const result:ResearchInput={...input,evidence:[...input.evidence],gaps:[...input.gaps],risks:[...input.risks]};const season=nbaSeason(event.commence_time),prior=priorNbaSeason(season);const bindings=new Map<string,number>();const logSources=new Map<string,Awaited<ReturnType<typeof nbaTable>>>();
- const add=(entity:string,metric:string,value:string|number,source:{sourceUrl:string;observedAt:string},period:string)=>result.evidence.push({id:`nba${result.evidence.length+1}`,entity,metric,value,...source,period});
+ const add=(entity:string,metric:string,value:string|number,source:{sourceUrl:string;observedAt:string},period:string)=>result.evidence.push({id:`nba${result.evidence.length+1}`,entity,metric,value,sourceUrl:source.sourceUrl,observedAt:source.observedAt,period});
  const cutoff=new Date(Math.min(Date.now(),Date.parse(event.commence_time))-86400000).toISOString().slice(0,10);const dateTo=`${cutoff.slice(5,7)}/${cutoff.slice(8,10)}/${cutoff.slice(0,4)}`;
  let available=false;
  for(const targetSeason of [season,prior])try{

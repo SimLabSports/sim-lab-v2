@@ -11,7 +11,7 @@ import {admitScan,ScanAdmissionError} from './scan-budget';
 import {GREEN_CHECK_RESEARCH_INSTRUCTIONS} from './green-check-instructions';
 import type {GcmEvaluation,ResearchInput} from '../research-types';
 import type {MarketEvent,MarketKey} from '../markets';
-const version='gcm-grounded-research-7';
+const version='gcm-grounded-research-8';
 const sideSchema=z.object({selection:z.string(),supportingEvidenceIds:z.array(z.string()).max(12),counterEvidenceIds:z.array(z.string()).max(12)}).strict();
 const decisionSchema=z.object({selection:z.string().nullable(),assessments:z.array(sideSchema).min(2).max(3),riskIndices:z.array(z.number().int().min(0)).max(30)}).strict();
 const busy=new Map<string,Promise<GcmEvaluation>>();
@@ -47,12 +47,14 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   const risks=[...input.risks,...input.gaps];
   const evidenceIds={type:'array',maxItems:12,items:{type:'string',enum:[...allowedIds]}};
   const schema={type:'object',properties:{selection:{type:['string','null'],enum:[...selections,null]},assessments:{type:'array',minItems:selections.length,maxItems:selections.length,items:{type:'object',properties:{selection:{type:'string',enum:selections},supportingEvidenceIds:evidenceIds,counterEvidenceIds:evidenceIds},required:['selection','supportingEvidenceIds','counterEvidenceIds'],additionalProperties:false}},riskIndices:{type:'array',maxItems:30,items:{type:'integer',minimum:0}}},required:['selection','assessments','riskIndices'],additionalProperties:false};
+  const researchPayload=JSON.stringify({event:{sport:event.sport_key,family:profile.family,home:input.home,away:input.away,start:input.startTime,market:key,outcomeStructure:profile.family==='soccer'?'THREE_WAY_WITH_DRAW':'SETTLEMENT_REQUIRES_VERIFICATION'},requiredAssessments:selections,requiredSportFeatures:profile.required,evidence:input.evidence.map(({id,entity,metric,value,sourceUrl,observedAt,period})=>({id,entity,metric,value,sourceUrl,observedAt,period})),risks});
+  if(Buffer.byteLength(researchPayload,'utf8')>300000)return save({...evaluation,status:'ERROR',errorCode:'GCM_EVIDENCE_TOO_LARGE',explanation:'The verified evidence packet exceeds the bounded research request size. No OpenAI request or scan quota was consumed.'});
   try{await admitScan(`${identity}:${event.commence_time}`,visitor);}catch(error){
    if(error instanceof ScanAdmissionError)return {...evaluation,status:'ERROR',errorCode:error.quota.scope==='MATCHUP_BUSY'?'GCM_SCAN_BUSY':'GCM_SCAN_LIMIT',scanQuota:error.quota,explanation:error.message,expiresAt:new Date(Math.min(Date.now()+90000,Date.parse(error.quota.resetsAt))).toISOString()};
    const reason=databaseFailure(error);return {...evaluation,status:'ERROR',errorCode:reason.code,explanation:`Research scan admission: ${reason.message}`};
   }
   try{
-   const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},cache:'no-store',signal:AbortSignal.timeout(45000),body:JSON.stringify({model:process.env.OPENAI_MODEL,store:false,max_output_tokens:1800,instructions:GREEN_CHECK_RESEARCH_INSTRUCTIONS,input:JSON.stringify({event:{sport:event.sport_key,family:profile.family,home:input.home,away:input.away,start:input.startTime,market:key,outcomeStructure:profile.family==='soccer'?'THREE_WAY_WITH_DRAW':'SETTLEMENT_REQUIRES_VERIFICATION'},requiredAssessments:selections,requiredSportFeatures:profile.required,evidence:input.evidence,risks}),text:{format:{type:'json_schema',name:'gcm_grounded_research',strict:true,schema}}})});
+   const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},cache:'no-store',signal:AbortSignal.timeout(45000),body:JSON.stringify({model:process.env.OPENAI_MODEL,store:false,max_output_tokens:1800,instructions:GREEN_CHECK_RESEARCH_INSTRUCTIONS,input:researchPayload,text:{format:{type:'json_schema',name:'gcm_grounded_research',strict:true,schema}}})});
    if(!response.ok){
     const providerError=await response.json().catch(()=>null);
     const reason=openAiFailure(response.status,providerError?.error?.code);

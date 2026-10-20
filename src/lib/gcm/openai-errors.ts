@@ -1,5 +1,6 @@
 // Provider response messages can echo key fragments. Only fixed, classified text escapes.
 export function openAiFailure(status:number,code?:unknown){
+ if(code==='context_length_exceeded')return {code:'OPENAI_CONTEXT_EXCEEDED',message:'The grounded research input exceeds the configured model context. No assessment was substituted; the evidence packet must be reduced before retrying.'};
  if(status===401)return {code:'OPENAI_AUTHENTICATION_FAILED',message:'OpenAI rejected OPENAI_API_KEY (HTTP 401). Replace this secret in the Vercel Production environment with a valid OpenAI API project key, then redeploy. Database and statistics access do not fix AI authentication.'};
  if(status===403)return {code:'OPENAI_ACCESS_DENIED',message:'OpenAI denied this project or key access (HTTP 403). Verify project permissions and model availability for the configured key.'};
  if(status===429&&code==='insufficient_quota')return {code:'OPENAI_QUOTA_EXHAUSTED',message:'OpenAI reports insufficient API quota. Check API project billing and spending limits; no research estimate was substituted.'};
