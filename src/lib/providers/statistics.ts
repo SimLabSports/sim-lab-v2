@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { mlbResearch } from './mlb';
+import { nflResearch } from './nfl';
 import { providerJson } from '../server/provider-http';
 import type { ResearchInput } from '../research-types';
 import type { MarketEvent } from '../markets';
@@ -9,6 +10,7 @@ const sports:Record<string,string>={americanfootball_nfl:'nfl',basketball_nba:'n
 const keyFor=(sport:string)=>process.env[`SPORTSDATAIO_${sport.toUpperCase()}_KEY`]||process.env.SPORTSDATAIO_API_KEY;
 export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
  if(event.sport_key==='baseball_mlb'&&!keyFor('mlb'))return mlbResearch(event);
+ if(event.sport_key==='americanfootball_nfl'&&(!keyFor('nfl')||process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED!=='true'))return nflResearch(event);
  const sport=sports[event.sport_key];
  const result:ResearchInput={eventId:event.id,sport:event.sport_key,startTime:event.commence_time,home:event.home_team||'',away:event.away_team||'',provider:sport?'SportsDataIO':'Not connected',providerEventId:null,retrievedAt:new Date().toISOString(),status:'INCOMPLETE',evidence:[],gaps:[],risks:[],lineupConfirmed:false,injuriesVerified:false,pregame:Date.now()<Date.parse(event.commence_time)};
  if(!sport){result.gaps.push(`A verified sport-specific statistics adapter is not connected for ${event.sport_key}. NCAA, soccer and tennis require their own subscribed feeds and schemas.`);return result;}

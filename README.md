@@ -18,6 +18,7 @@ Never put provider secrets in `NEXT_PUBLIC_` variables. Never commit `.env.local
 - Direct The Odds API adapter: actual local Fanatics events were retrieved. Production `/api/connections` still reports `ODDS_API_KEY` absent; add that exact server secret in the existing Vercel project and redeploy.
 - OpenAI GCM interpretation: production reports OpenAI configuration present. Local OpenAI/database secrets are absent; no successful end-to-end AI call has been verified. Production market credential blocks selecting a live event there.
 - Expert curation: PostgreSQL persistence and authenticated import are implemented. Production reports database configured; `SIMLAB_ADMIN_TOKEN` is missing. The connections endpoint now probes connectivity and table existence. No real analyst votes are seeded.
+- Public NFL fallback: exact ESPN event/team/start-time matching, current-season efficiency metrics, completed-game form and rest, and attributed injury reports. It excludes ESPN odds, predictions and analyst opinions. Final availability, advanced matchup features and calibration remain required for approval.
 - Licensed SportsDataIO expansion: NFL/NBA/NHL/MLB team/event mapping and available season statistics retrieval implemented against documented endpoints. Awaiting subscribed real-data credentials and confirmation that inputs are not scrambled trial statistics. Complete sport-specific lineups, injuries, recent game stats and advanced features are not yet mapped for these products. NCAA, soccer and tennis statistics still require their own verified provider adapters.
 
 See `/api/connections` for process-local configuration and actual successful retrieval timestamps. Configuration alone is never a verified connection. Market caches and provider health are process-local. Billable scan admission, quotas and cross-worker duplicate leases use PostgreSQL.
@@ -34,7 +35,7 @@ Original quote timestamps remain authoritative. Stale quotes cannot count as fre
 
 `src/lib/gcm/evaluator.ts` sends only verified statistical inputs to the server-side OpenAI Responses API using strict structured output. It sends neither sportsbook odds nor expert selections. AI can select supplied evidence IDs, counter-evidence and a qualitative research lean. Narrative facts are rendered from original evidence values rather than unconstrained generated claims. Invalid references, refusals, incomplete responses and provider errors fail closed. Every published evaluation must be persisted with inputs, timestamps and version identifiers.
 
-Pregame MLB moneyline research uses official data. NFL/NBA/NHL moneyline qualitative research can use verified season statistics from configured real-data SportsDataIO subscriptions, explicitly retaining all missing advanced features and injury/lineup gaps. NCAA Football/Basketball, soccer and tennis require verified sport-specific adapters; unsupported markets give a precise reason. All quantitative probabilities, edges and uncertainty intervals remain null. An offline, sport-specific logistic fitting and Platt calibration pipeline is supplied; no trained/calibrated artifact is claimed without real historical records. See `docs/gcm-operations.md`. Research leans are not eligible for a green GCM approval or featured recommendation. Other sport/market extractors and validated models are required to enable those approvals honestly.
+Pregame MLB moneyline research uses official data. NFL moneyline research defaults to verified public ESPN data when a confirmed real-data subscription is unavailable. NFL/NBA/NHL moneyline qualitative research can also use verified season statistics from configured real-data SportsDataIO subscriptions, explicitly retaining all missing advanced features and injury/lineup gaps. NCAA Football/Basketball, soccer and tennis require verified sport-specific adapters; unsupported markets give a precise reason. All quantitative probabilities, edges and uncertainty intervals remain null. An offline, sport-specific logistic fitting and Platt calibration pipeline is supplied; no trained/calibrated artifact is claimed without real historical records. See `docs/gcm-operations.md`. Research leans are not eligible for a green GCM approval or featured recommendation. Other sport/market extractors and validated models are required to enable those approvals honestly.
 
 ## Expert consensus and administrator entry
 
@@ -67,7 +68,7 @@ Three checks require three fresh, independent evaluations for the same normalize
 ## Main implementation files
 
 Provider/cache logic: `src/lib/market-server.ts`, `src/lib/server/provider-http.ts`.
-Statistics: `src/lib/providers/mlb.ts`, `src/lib/providers/statistics.ts`.
+Statistics: `src/lib/providers/mlb.ts`, `src/lib/providers/nfl.ts`, `src/lib/providers/statistics.ts`.
 GCM: `src/lib/gcm/evaluator.ts`, `src/lib/research-types.ts`.
 Experts and persistence: `src/lib/providers/experts.ts`, `src/lib/server/database.ts`, `migrations/001_live_intelligence.sql`.
 Authentication: `src/lib/server/admin-auth.ts`.

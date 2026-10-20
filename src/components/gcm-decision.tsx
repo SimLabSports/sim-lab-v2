@@ -1,11 +1,11 @@
 import {Check,Info} from 'lucide-react';
 import type {GcmEvaluation} from '@/lib/research-types';
 import {formatOdds,formatUpdated} from '@/lib/markets';
-export function GcmDecision({evaluation}:{evaluation:GcmEvaluation}){
+export function GcmDecision({evaluation,embedded=false}:{evaluation:GcmEvaluation;embedded?:boolean}){
  const decision=evaluation.approval;if(!decision)return null;
  const label=decision.approved?'QUALIFIED':decision.status==='LEAN'?'RESEARCH LEAN':decision.status==='INCOMPLETE'?'INSUFFICIENT DATA':'PASS';
- return <section aria-label="The Green Check Method · third alignment perspective">
-  <h3 className={decision.approved?'green':''}>{decision.approved&&<Check size={18}/>} The Green Check Method</h3>
+ return <div aria-label="The Green Check Method · third alignment perspective">
+  {!embedded&&<h3 className={decision.approved?'green':''}>{decision.approved&&<Check size={18}/>} The Green Check Method</h3>}
   <div className="metric-row"><span>Third perspective</span><strong>{label}</strong></div>
   <div className="metric-row"><span>Selection</span><strong>{decision.selection??'Not established'}</strong></div>
   <div className="metric-row"><span>Grade / category</span><strong>{decision.grade&&decision.category?`${decision.grade} · ${decision.category}`:'Not qualified'}</strong></div>
@@ -22,5 +22,5 @@ export function GcmDecision({evaluation}:{evaluation:GcmEvaluation}){
    {candidate.qualifyingEvidenceIds.map(id=>{const e=evaluation.input.evidence.find(e=>e.id===id);return e?<p key={id}><a href={e.sourceUrl} target="_blank" rel="noopener noreferrer">[{id}] {e.entity}: {e.metric} — {e.value}</a></p>:null;})}
   </details>)}
   <p>{decision.ruleVersion} · Assessed {formatUpdated(decision.assessedAt)} · {decision.modelVersion??'No validated probability model'}.</p>
- </section>;
+ </div>;
 }
