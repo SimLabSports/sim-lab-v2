@@ -13,12 +13,12 @@ export async function runGcmScan(event:MarketEvent,market:MarketKey){
  if(!task){
   const cached=results.get(key);
   const embedded=event.intelligence?.[market];
-  if(embedded?.gcm&&embedded.gcm.status!=='ERROR'&&embedded.gcm.modelVersion.startsWith('gcm-grounded-research-8')&&Date.parse(embedded.gcm.expiresAt)>Date.now())return embedded;
+  if(embedded?.gcm&&embedded.gcm.status!=='ERROR'&&embedded.gcm.modelVersion.startsWith('gcm-grounded-research-9')&&Date.parse(embedded.gcm.expiresAt)>Date.now())return embedded;
   if(cached?.gcm&&cached.gcm.status!=='ERROR'&&Date.parse(cached.gcm.expiresAt)>Date.now())return cached;
   task=(async()=>{
    const response=await fetch('/api/gcm/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:event.id,sport:event.sport_key,market}),cache:'no-store',signal:AbortSignal.timeout(65000)});
    let value=await response.json();
-   if(response.status===202){for(let i=0;i<8;i++){await new Promise(resolve=>setTimeout(resolve,1500));const read=await fetch(`/api/intelligence?eventId=${encodeURIComponent(event.id)}&sport=${event.sport_key}&market=${market}`,{cache:'no-store'});if(read.ok){const saved=await read.json();if(saved.gcm?.status!=='ERROR'&&saved.gcm?.modelVersion.startsWith('gcm-grounded-research-8')&&Date.parse(saved.gcm.expiresAt)>Date.now()){value=saved;break;}}}}
+   if(response.status===202){for(let i=0;i<8;i++){await new Promise(resolve=>setTimeout(resolve,1500));const read=await fetch(`/api/intelligence?eventId=${encodeURIComponent(event.id)}&sport=${event.sport_key}&market=${market}`,{cache:'no-store'});if(read.ok){const saved=await read.json();if(saved.gcm?.status!=='ERROR'&&saved.gcm?.modelVersion.startsWith('gcm-grounded-research-9')&&Date.parse(saved.gcm.expiresAt)>Date.now()){value=saved;break;}}}}
    if(!response.ok)throw new Error(value.gcm?.explanation||value.error||'The scan could not be completed.');
    for(const [id,stored]of results)if(!stored.gcm||Date.parse(stored.gcm.expiresAt)<=Date.now())results.delete(id);
    if(results.size>=200)results.delete(results.keys().next().value!);

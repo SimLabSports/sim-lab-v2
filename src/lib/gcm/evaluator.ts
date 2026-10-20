@@ -11,7 +11,7 @@ import {admitScan,ScanAdmissionError} from './scan-budget';
 import {GREEN_CHECK_RESEARCH_INSTRUCTIONS} from './green-check-instructions';
 import type {GcmEvaluation,ResearchInput} from '../research-types';
 import type {MarketEvent,MarketKey} from '../markets';
-const version='gcm-grounded-research-8';
+const version='gcm-grounded-research-9';
 const sideSchema=z.object({selection:z.string(),supportingEvidenceIds:z.array(z.string()).max(12),counterEvidenceIds:z.array(z.string()).max(12)}).strict();
 const decisionSchema=z.object({selection:z.string().nullable(),assessments:z.array(sideSchema).min(2).max(3),riskIndices:z.array(z.number().int().min(0)).max(30)}).strict();
 const busy=new Map<string,Promise<GcmEvaluation>>();
@@ -46,7 +46,7 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   const selections=profile.family==='soccer'?[input.home,input.away,'Draw']:[input.home,input.away];
   const risks=[...input.risks,...input.gaps];
   const evidenceIds={type:'array',maxItems:12,items:{type:'string',enum:[...allowedIds]}};
-  const schema={type:'object',properties:{selection:{type:['string','null'],enum:[...selections,null]},assessments:{type:'array',minItems:selections.length,maxItems:selections.length,items:{type:'object',properties:{selection:{type:'string',enum:selections},supportingEvidenceIds:evidenceIds,counterEvidenceIds:evidenceIds},required:['selection','supportingEvidenceIds','counterEvidenceIds'],additionalProperties:false}},riskIndices:{type:'array',maxItems:30,items:{type:'integer',minimum:0}}},required:['selection','assessments','riskIndices'],additionalProperties:false};
+  const schema={type:'object',properties:{selection:{type:['string','null'],enum:[...selections,null]},assessments:{type:'array',minItems:selections.length,maxItems:selections.length,items:{type:'object',properties:{selection:{type:'string',enum:selections},supportingEvidenceIds:evidenceIds,counterEvidenceIds:evidenceIds},required:['selection','supportingEvidenceIds','counterEvidenceIds'],additionalProperties:false}},riskIndices:{type:'array',maxItems:Math.min(30,risks.length),items:risks.length?{type:'integer',enum:risks.map((_,index)=>index)}:{type:'integer'}}},required:['selection','assessments','riskIndices'],additionalProperties:false};
   const researchPayload=JSON.stringify({event:{sport:event.sport_key,family:profile.family,home:input.home,away:input.away,start:input.startTime,market:key,outcomeStructure:profile.family==='soccer'?'THREE_WAY_WITH_DRAW':'SETTLEMENT_REQUIRES_VERIFICATION'},requiredAssessments:selections,requiredSportFeatures:profile.required,evidence:input.evidence.map(({id,entity,metric,value,sourceUrl,observedAt,period})=>({id,entity,metric,value,sourceUrl,observedAt,period})),risks});
   if(Buffer.byteLength(researchPayload,'utf8')>300000)return save({...evaluation,status:'ERROR',errorCode:'GCM_EVIDENCE_TOO_LARGE',explanation:'The verified evidence packet exceeds the bounded research request size. No OpenAI request or scan quota was consumed.'});
   try{await admitScan(`${identity}:${event.commence_time}`,visitor);}catch(error){
@@ -67,8 +67,11 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
    const decision=decisionSchema.parse(JSON.parse(raw));
    if(decision.selection!==null&&!selections.includes(decision.selection))throw new Error('Invalid research selection.');
    if(decision.assessments.length!==selections.length||new Set(decision.assessments.map(a=>a.selection)).size!==selections.length||decision.assessments.some(a=>!selections.includes(a.selection)))throw new Error('The AI did not independently assess every exact outcome, including a regulation draw where applicable.');
-   if(decision.assessments.some(a=>[...a.supportingEvidenceIds,...a.counterEvidenceIds].some(id=>!allowedIds.has(id))||a.supportingEvidenceIds.some(id=>a.counterEvidenceIds.includes(id)))||decision.riskIndices.some(index=>index>=risks.length))throw new Error('The AI response referenced missing or contradictory evidence IDs.');
-   const sideAssessments=decision.assessments.map(a=>({...a,supportingEvidenceIds:[...new Set(a.supportingEvidenceIds)],counterEvidenceIds:[...new Set(a.counterEvidenceIds)]}));
+   if(decision.assessments.some(a=>[...a.supportingEvidenceIds,...a.counterEvidenceIds].some(id=>!allowedIds.has(id)))||decision.riskIndices.some(index=>index>=risks.length))throw new Error('The AI response referenced an unknown evidence ID or out-of-range risk index.');
+   const ambiguities:string[]=[];
+   const sideAssessments=decision.assessments.map(a=>{const overlap=new Set(a.supportingEvidenceIds.filter(id=>a.counterEvidenceIds.includes(id)));if(overlap.size)ambiguities.push(`Ambiguous AI evidence for ${a.selection}: ${[...overlap].join(', ')} was classified both ways and excluded from supporting/opposing votes. Independent resolution is required before approval.`);return {...a,supportingEvidenceIds:[...new Set(a.supportingEvidenceIds)].filter(id=>!overlap.has(id)),counterEvidenceIds:[...new Set(a.counterEvidenceIds)].filter(id=>!overlap.has(id))};});
+   // Ambiguity is preserved as an unresolved approval risk, never converted to positive evidence.
+   if(ambiguities.length){input.risks.push(...ambiguities);risks.push(...ambiguities);}
    const chosen=sideAssessments.find(a=>a.selection===decision.selection);
    const supported=chosen?.supportingEvidenceIds??[];const selected=decision.selection&&supported.length>=3?decision.selection:null;
    const factors=supported.map(id=>{const evidence=input.evidence.find(item=>item.id===id)!;return {text:`${evidence.entity}: ${evidence.metric} — ${evidence.value} (${evidence.period}).`,evidenceIds:[id]};});
