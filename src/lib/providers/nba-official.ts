@@ -5,17 +5,21 @@ import {participantKey} from '../event-identity';
 import type {MarketEvent} from '../markets';
 import type {ResearchInput} from '../research-types';
 import priorArchive from '../../../data/nba-prior-history.json';
+import officialPriors from '../../../data/nba-official-priors.json';
 import {nbaFeatures,nbaForm,type NbaGame} from '../gcm/nba-features';
 const scalar=z.union([z.string(),z.number().finite(),z.null()]);
 const tableSchema=z.object({parameters:z.record(z.string(),z.unknown()),resultSets:z.array(z.object({headers:z.array(z.string()),rowSet:z.array(z.array(scalar))}))});
 export function nbaSeason(date:string){const d=new Date(date),year=d.getUTCFullYear()-(d.getUTCMonth()<8?1:0);return `${year}-${String(year+1).slice(-2)}`;}
 export const priorNbaSeason=(season:string)=>`${Number(season.slice(0,4))-1}-${season.slice(2,4)}`;
 export async function nbaTable(endpoint:'leaguedashteamstats'|'leaguedashplayerstats'|'leaguegamelog'|'commonteamroster',season:string,extra:Record<string,string>={}){
+ // Completed historical responses remain explicitly dated. Never reuse for a current season or roster.
+ const archived=officialPriors.entries.find(e=>e.endpoint===endpoint&&e.season===season);
+ if(archived&&season<nbaSeason(new Date().toISOString()))return {sourceUrl:archived.sourceUrl,observedAt:archived.observedAt,rows:archived.rows as Record<string,string|number|null>[]};
  const common={LeagueID:'00',Season:season,SeasonType:'Regular Season'};
  const advanced={PerMode:'PerGame',MeasureType:'Advanced',LastNGames:'0',Month:'0',OpponentTeamID:'0',PaceAdjust:'N',PlusMinus:'N',Rank:'N',Period:'0',DateFrom:'',DateTo:'',Location:'',Outcome:'',SeasonSegment:'',VsConference:'',VsDivision:'',GameSegment:'',PlayerExperience:'',PlayerPosition:'',StarterBench:'',ShotClockRange:'',PORound:'0',Conference:'',Division:'',TeamID:'0',GameScope:''};
  const params=new URLSearchParams(endpoint==='commonteamroster'?{LeagueID:'00',Season:season,...extra}:endpoint==='leaguegamelog'?{...common,Counter:'0',Direction:'DESC',PlayerOrTeam:'T',Sorter:'DATE',DateFrom:'',DateTo:'',...extra}:{...common,...advanced,...(endpoint==='leaguedashplayerstats'?{College:'',Country:'',DraftPick:'',DraftYear:'',Height:'',Weight:''}:{}),...extra});
  const url=`https://stats.nba.com/stats/${endpoint}?${params}`;
- const result=await providerJson({provider:`NBA official ${endpoint}`,cacheKey:`nba-official-v1:${url}`,url,headers:{Referer:'https://www.nba.com/'},ttl:900000,validate:data=>{const parsed=tableSchema.parse(data);if(parsed.parameters.Season!==season)throw Error('NBA season mismatch');return {data:parsed,observedAt:new Date().toISOString()};}});
+ const result=await providerJson({provider:`NBA official ${endpoint}`,cacheKey:`nba-official-v1:${url}`,url,headers:{Referer:'https://www.nba.com/'},ttl:900000,timeoutMs:3000,validate:data=>{const parsed=tableSchema.parse(data);if(parsed.parameters.Season!==season)throw Error('NBA season mismatch');return {data:parsed,observedAt:new Date().toISOString()};}});
  const t=result.data.resultSets[0];if(!t||new Set(t.headers).size!==t.headers.length||t.rowSet.some(row=>row.length!==t.headers.length))throw Error('NBA table schema mismatch');
  return {sourceUrl:url,observedAt:result.observedAt,rows:t.rowSet.map(row=>Object.fromEntries(t.headers.map((name,i)=>[name,row[i]])))};
 }
@@ -43,7 +47,7 @@ export async function enrichNba(event:MarketEvent,input:ResearchInput):Promise<R
    add(name,'official current roster sample',current.size,roster,`${season} roster listing; not a confirmed starting five or injury clearance`);
    const players=priorPlayers.rows.filter(r=>current.has(r.PLAYER_ID)&&typeof r.MIN==='number'&&typeof r.USG_PCT==='number'&&typeof r.GP==='number'&&r.GP>=10).sort((a,b)=>Number(b.MIN)-Number(a.MIN)).slice(0,8);
    for(const player of players)add(name,'current-roster player historical minutes/usage',`${player.PLAYER_NAME}: ${player.MIN} minutes/game; ${(Number(player.USG_PCT)*100).toFixed(1)}% usage; ${player.GP} games; prior team ${player.TEAM_ABBREVIATION}`,priorPlayers,`${prior} historical role; not projected ${season} minutes, current usage or confirmed rotation`);
-  }catch{result.gaps.push(`Current NBA roster or historical player usage unavailable for ${name}.`);}}));}catch{result.gaps.push('Official historical NBA player minutes/usage endpoint unavailable.');}
+  }catch{result.gaps.push(`Current NBA roster unavailable for ${name}; player roles below belong to the historical team only, not a confirmed current rotation.`);for(const player of priorPlayers.rows.filter(r=>r.TEAM_ID===id&&typeof r.MIN==='number'&&typeof r.USG_PCT==='number'&&typeof r.GP==='number'&&r.GP>=10).sort((a,b)=>Number(b.MIN)-Number(a.MIN)).slice(0,8))add(name,'prior-team player historical minutes/usage',`${player.PLAYER_NAME}: ${player.MIN} minutes/game; ${(Number(player.USG_PCT)*100).toFixed(1)}% usage; ${player.GP} games`,priorPlayers,`${prior} original team role, not verified current roster, projected minutes or starting status`);}}));}catch{result.gaps.push('Official historical NBA player minutes/usage endpoint unavailable.');}
  if(available){
   const games:NbaGame[]=(priorArchive.games as NbaGame[]).filter(g=>g.season===prior||g.season===season);
   const current=logSources.get(season);if(current){const pairs=new Map<string,typeof current.rows>();for(const r of current.rows){const id=String(r.GAME_ID),list=pairs.get(id)??[];list.push(r);pairs.set(id,list);}const jobs=[...pairs].filter(([,pair])=>pair.some(r=>[...bindings.values()].includes(Number(r.TEAM_ID)))).slice(0,40);
@@ -60,7 +64,7 @@ export async function enrichNba(event:MarketEvent,input:ResearchInput):Promise<R
    for(const [i,feature]of nbaFeatures.entries())add(name,feature.metric,form.values[i],{sourceUrl:source.sourceUrl,observedAt:new Date().toISOString()},`${form.period}; ${form.priorSeasonGames} prior-season games; derived now from timestamp-audited official history`);
   }
   result.provider+=' + NBA Stats';result.status='AVAILABLE';result.gaps=result.gaps.filter(g=>!g.startsWith('Current-season efficiency statistics/sample could not be verified')&&!g.startsWith('No completed current-season recent results')&&!g.startsWith('possession-based offensive/defensive ratings'));
-  result.gaps.unshift(`Official NBA ratings/pace and current-roster historical roles are available. Prior-season inputs retain ${prior} dates and receive 0.35 relative per-game weight; they are not ${season} current form.`);
+  result.gaps.unshift(`Official NBA historical ratings/pace are available; current roster and player-role coverage is reported separately. Prior-season inputs retain ${prior} dates and receive 0.35 relative per-game weight; they are not ${season} current form.`);
   result.risks.push("NBA rolling-efficiency baseline does not adjust for offseason roster changes, tonight's confirmed lineup or injury impact; those require separate verified clearance.");
  }
  result.gaps.push('Historical ratings and player roles are explicitly dated priors. Current starting five, minutes restrictions, final availability and effects of offseason roster changes remain unverified.');return result;

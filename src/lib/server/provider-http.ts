@@ -10,14 +10,14 @@ const state:State=root.simlabProviders??={cache:new Map(),pending:new Map(),back
 export function providerHealth(provider:string){return state.health.get(provider)??{lastSuccessAt:null,lastError:null};}
 export function providerSucceeded(provider:string){state.health.set(provider,{lastSuccessAt:new Date().toISOString(),lastError:null});}
 export function providerFailed(provider:string,safeMessage:string){state.health.set(provider,{lastSuccessAt:state.health.get(provider)?.lastSuccessAt??null,lastError:safeMessage});}
-export async function providerJson<T>(options:{provider:string;cacheKey:string;url:string;headers?:Record<string,string>;ttl:number;validate:(input:unknown)=>T}):Promise<T>{
+export async function providerJson<T>(options:{provider:string;cacheKey:string;url:string;headers?:Record<string,string>;ttl:number;timeoutMs?:number;validate:(input:unknown)=>T}):Promise<T>{
   const old=state.cache.get(options.cacheKey);
   if(old&&old.expires>Date.now())return old.value as T;
   if((state.backoff.get(options.provider)??0)>Date.now())throw new ProviderError(options.provider,'BACKOFF','Provider is temporarily paused after a failure. Retry shortly.',429);
   const pending=state.pending.get(options.cacheKey);if(pending)return pending as Promise<T>;
   const task=(async()=>{
     try{
-      const response=await fetch(options.url,{headers:options.headers,cache:'no-store',signal:AbortSignal.timeout(15000)});
+      const response=await fetch(options.url,{headers:options.headers,cache:'no-store',signal:AbortSignal.timeout(options.timeoutMs??15000)});
       if(!response.ok){
         const seconds=Math.min(3600,Math.max(30,Number(response.headers.get('retry-after'))||60));
         state.backoff.set(options.provider,Date.now()+seconds*1000);

@@ -45,3 +45,11 @@ The local Knicks reproduction produced a 71.08% home baseline forecast, with a 9
 - Exact quota scope/count/reset must be verified using the authenticated production diagnostic after deployment. A full global cost window remains binding; the implementation does not manufacture additional quota.
 
 Reproduce collection/training with `node scripts/collect-nba-model-history.mjs` and `node --experimental-strip-types scripts/train-nba-model.mjs`. Publication is a trusted reviewed deployment step; collection/training scripts never promote their own candidate. Research, prices, clearance status and official approval remain separate.
+
+## Production verification and Maryland clarification
+
+Production deployed the repair successfully. Historical quota reconstruction at the Knicks denials showed global hour 5/20 and global day 9/50, indicating the visitor cap rather than either global cap; legacy visitor counters at the exact denied timestamp are not retained. Current production audit returned hour 0/20 and day 8/50. The delayed GitHub tool response completed after the Knicks game started; pregame clearance is correctly unavailable after start. No retrospective pregame AI evaluation is manufactured.
+
+Vercel timed out reaching NBA Stats although the same public endpoints worked locally. Completed 2025–26 official responses are now shipped with original source URLs and capture timestamps in data/nba-official-priors.json. These authentic historical inputs are not fresh availability evidence. Current endpoint calls are bounded to three seconds; failure is explicit. Current roster/injuries are never replaced with prior-season clearance.
+
+The user confirmed Maryland. Fanatics Maryland rules, effective August 31, 2026, were inspected at https://sportsbook.fanatics.com/legal/md/house-rules/: full-game basketball moneyline includes overtime, with void/tie/abandonment provisions. This resolves jurisdiction identification, but does not by itself clear event integrity, abandonment/void risk or current availability. No state needs to be requested again. The current strict settlement gate remains unapproved until its complete contract is mapped; point edge is not fabricated.
