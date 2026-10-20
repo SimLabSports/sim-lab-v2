@@ -54,3 +54,5 @@ export function trainHistoricalModel(sport:string,games:HistoricalGame[]){
  const report=metrics(forecasts),baseline=metrics(holdout.map(g=>({p:baseRate,y:g.homeWon})));
  return {sport,market:'h2h',version:'performance-logistic-platt-1',createdAt:new Date().toISOString(),features:contract,orientation:'home minus away',model,calibrator,counts:{train:train.length,calibration:calibrate.length,holdout:holdout.length},cutoffs:{trainBefore:new Date(firstCut).toISOString(),calibrationBefore:new Date(secondCut).toISOString()},holdout:report,baseline,passesEngineeringChecks:report.brier<baseline.brier&&report.logLoss<baseline.logLoss&&report.calibrationError<=.05,approvedForLive:false,limitations:['No live approval: independent review, data rights and sport-specific completeness gates remain required.','No uncertainty interval or ROI claim is produced by this pipeline.']};
 }
+
+export {fit as fitLogistic,predict as predictLogistic,metrics as scoreForecasts};

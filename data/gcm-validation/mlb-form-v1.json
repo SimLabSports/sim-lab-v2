@@ -1,0 +1,465 @@
+{
+  "modelId": "mlb-official-scoring-form",
+  "version": "1",
+  "counts": {
+    "train": 29521,
+    "calibration": 2233,
+    "holdout": 4304
+  },
+  "holdout": {
+    "brier": 0.24650920992270167,
+    "logLoss": 0.6860838419084205,
+    "calibrationError": 0.018852383243206,
+    "bins": [
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 51,
+        "meanProbability": 0.3777298486289625,
+        "observedFrequency": 0.23529411764705882
+      },
+      {
+        "count": 1175,
+        "meanProbability": 0.4686235722458618,
+        "observedFrequency": 0.5029787234042553
+      },
+      {
+        "count": 2716,
+        "meanProbability": 0.5434783374189115,
+        "observedFrequency": 0.5353460972017673
+      },
+      {
+        "count": 361,
+        "meanProbability": 0.6240547356213256,
+        "observedFrequency": 0.6537396121883656
+      },
+      {
+        "count": 1,
+        "meanProbability": 0.7057277171040883,
+        "observedFrequency": 0
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      }
+    ]
+  },
+  "baseline": {
+    "brier": 0.24894100401069194,
+    "logLoss": 0.6910277926909348,
+    "calibrationError": 0.003773092218829044,
+    "bins": [
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 4304,
+        "meanProbability": 0.5365333152671562,
+        "observedFrequency": 0.5327602230483272
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      }
+    ]
+  },
+  "bySeason": {
+    "2025": {
+      "count": 2237,
+      "model": {
+        "brier": 0.2458197814944895,
+        "logLoss": 0.6846620578099272,
+        "calibrationError": 0.0228282800587171,
+        "bins": [
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 30,
+            "meanProbability": 0.3729381485448531,
+            "observedFrequency": 0.23333333333333334
+          },
+          {
+            "count": 618,
+            "meanProbability": 0.4678721179290884,
+            "observedFrequency": 0.5097087378640777
+          },
+          {
+            "count": 1395,
+            "meanProbability": 0.544143535441437,
+            "observedFrequency": 0.5376344086021505
+          },
+          {
+            "count": 194,
+            "meanProbability": 0.6240028094104303,
+            "observedFrequency": 0.6855670103092784
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          }
+        ]
+      },
+      "baseline": {
+        "brier": 0.2485093529763473,
+        "logLoss": 0.6901629493692196,
+        "calibrationError": 0.002134543472273265,
+        "bins": [
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 2237,
+            "meanProbability": 0.5365333152671098,
+            "observedFrequency": 0.538667858739383
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          }
+        ]
+      }
+    },
+    "2026": {
+      "count": 2067,
+      "model": {
+        "brier": 0.24725534025357332,
+        "logLoss": 0.6876225603546375,
+        "calibrationError": 0.015736925038585918,
+        "bins": [
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 21,
+            "meanProbability": 0.38457513446340447,
+            "observedFrequency": 0.23809523809523808
+          },
+          {
+            "count": 557,
+            "meanProbability": 0.4694573222777563,
+            "observedFrequency": 0.4955116696588869
+          },
+          {
+            "count": 1321,
+            "meanProbability": 0.542775876221769,
+            "observedFrequency": 0.5329295987887964
+          },
+          {
+            "count": 167,
+            "meanProbability": 0.6241150570878738,
+            "observedFrequency": 0.6167664670658682
+          },
+          {
+            "count": 1,
+            "meanProbability": 0.7057277171040883,
+            "observedFrequency": 0
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          }
+        ]
+      },
+      "baseline": {
+        "brier": 0.24940815609774653,
+        "logLoss": 0.6919637648779728,
+        "calibrationError": 0.010166600221141575,
+        "bins": [
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 2067,
+            "meanProbability": 0.5365333152671019,
+            "observedFrequency": 0.5263667150459603
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          },
+          {
+            "count": 0,
+            "meanProbability": null,
+            "observedFrequency": null
+          }
+        ]
+      }
+    }
+  },
+  "audit": {
+    "createdAt": "2026-10-20T20:38:29.980Z",
+    "historySha256": "4cbd51eddeb82854b274a3dc4dbcb448afa51f71fba27cbc12125c17abd0eaba",
+    "holdoutRecords": 4304,
+    "weeklyBlocks": 60,
+    "weeklyClusterBrierImprovement95Interval": [
+      0.000823770501718084,
+      0.004050394442167327
+    ],
+    "independentFeatureChecks": 40,
+    "sourceChecks": [
+      {
+        "id": "263816",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/263816/feed/live",
+        "passed": true,
+        "availabilityBound": "2010-04-05T04:56:00.000Z",
+        "lastPlayEndedAt": "2010-04-05T03:56:24.000Z"
+      },
+      {
+        "id": "288074",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/288074/feed/live",
+        "passed": true,
+        "availabilityBound": "2011-06-26T22:32:00.000Z",
+        "lastPlayEndedAt": "2011-06-26T21:33:02.000Z"
+      },
+      {
+        "id": "320069",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/320069/feed/live",
+        "passed": true,
+        "availabilityBound": "2012-09-27T22:03:00.000Z",
+        "lastPlayEndedAt": "2012-09-27T21:03:10.000Z"
+      },
+      {
+        "id": "381586",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/381586/feed/live",
+        "passed": true,
+        "availabilityBound": "2014-06-17T03:33:00.000Z",
+        "lastPlayEndedAt": "2014-06-17T02:34:31.000Z"
+      },
+      {
+        "id": "415849",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/415849/feed/live",
+        "passed": true,
+        "availabilityBound": "2015-09-19T04:30:00.000Z",
+        "lastPlayEndedAt": "2015-09-19T03:30:28.761Z"
+      },
+      {
+        "id": "490995",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/490995/feed/live",
+        "passed": true,
+        "availabilityBound": "2017-06-09T03:19:00.000Z",
+        "lastPlayEndedAt": "2017-06-09T02:19:38.574Z"
+      },
+      {
+        "id": "531486",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/531486/feed/live",
+        "passed": true,
+        "availabilityBound": "2018-09-05T06:19:00.000Z",
+        "lastPlayEndedAt": "2018-09-05T05:19:21.490Z"
+      },
+      {
+        "id": "635918",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/635918/feed/live",
+        "passed": true,
+        "availabilityBound": "2020-10-02T04:27:00.000Z",
+        "lastPlayEndedAt": "2020-10-02T03:27:31.721Z"
+      },
+      {
+        "id": "662156",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/662156/feed/live",
+        "passed": true,
+        "availabilityBound": "2022-07-08T05:51:00.000Z",
+        "lastPlayEndedAt": "2022-07-08T04:52:00.466Z"
+      },
+      {
+        "id": "748578",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/748578/feed/live",
+        "passed": true,
+        "availabilityBound": "2023-10-05T03:07:00.000Z",
+        "lastPlayEndedAt": "2023-10-05T02:07:43.267Z"
+      },
+      {
+        "id": "777412",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/777412/feed/live",
+        "passed": true,
+        "availabilityBound": "2025-06-21T21:38:00.000Z",
+        "lastPlayEndedAt": "2025-06-21T20:39:00.555Z"
+      },
+      {
+        "id": "849811",
+        "sourceUrl": "https://statsapi.mlb.com/api/v1.1/game/849811/feed/live",
+        "passed": true,
+        "availabilityBound": "2026-10-15T04:11:00.000Z",
+        "lastPlayEndedAt": "2026-10-15T03:11:16.421Z"
+      }
+    ],
+    "passes": true,
+    "reviewScope": "Reproducible code, source and chronological replay audit. Not an external human endorsement, prospective performance record or profitability test."
+  },
+  "limitations": [
+    "Reconstructed rolling features, not archived betting picks or pregame injury snapshots.",
+    "Game availability bounds are derived from official first pitch, duration and delay plus 60 minutes; ambiguous/resumed games excluded.",
+    "Scoring-form baseline omits player-level pitching, lineup, park and weather predictors. These require separate current risk checks.",
+    "No ROI, profitability, expert consensus or performance guarantee is claimed.",
+    "Promotion requires documented model review, matched live feature extraction, current approval gates and supported market settlement."
+  ]
+}

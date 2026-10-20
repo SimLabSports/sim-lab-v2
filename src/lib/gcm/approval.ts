@@ -1,7 +1,7 @@
 import {getMarket,impliedProbability,type MarketEvent,type MarketKey} from '../markets';
 import type {GcmEvaluation} from '../research-types';
 import type {ApprovalGate,CandidateDecision,CategoryDecision,GcmApproval,GcmCategory,Prediction} from './decision-types';
-export const approvalRuleVersion='gcm-approval-1';
+export const approvalRuleVersion='gcm-approval-2';
 type Policy={safeMinimum:number;minimumEdgePp:number;priceMin:number;priceMax:number};
 export function approvalPolicy():Policy{
  const number=(name:string,fallback:number)=>{const n=Number(process.env[name]);return Number.isFinite(n)&&process.env[name]?.trim()?n:fallback;};
@@ -20,14 +20,17 @@ export function approveGcm(event:MarketEvent,key:MarketKey,research:GcmEvaluatio
  const exactMarket=key==='h2h'&&research.line===null&&!!event.home_team&&!!event.away_team&&market?.outcomes.length===2&&new Set(market.outcomes.map(o=>o.name)).size===2&&market.outcomes.every(o=>[event.home_team,event.away_team].includes(o.name)&&o.point===undefined)&&!event.sport_key.startsWith('soccer_');
  const uniqueEvidence=new Set(input.evidence.map(e=>e.id)).size===input.evidence.length;
  const evidenceValid=(id:string)=>input.evidence.some(e=>e.id===id&&e.sourceUrl.startsWith('https://')&&fresh(e.observedAt,now,age));
+ const riskProof=(risk:string)=>input.riskAssessments?.find(p=>p.risk===risk&&p.evidenceIds.length>0&&p.evidenceIds.every(evidenceValid)&&fresh(p.observedAt,now,age));
+ const riskBlocked=input.risks.some(r=>riskProof(r)?.status==='BLOCKED');
+ const riskUnknown=input.risks.some(r=>riskProof(r)?.status!=='CLEAR');
  const bothSides=[input.home,input.away].every(side=>research.sideAssessments?.filter(a=>a.selection===side).length===1);
  const base:ApprovalGate[]=[
   gate('event_market',identity&&exactMarket?'PASS':'MISSING',identity&&exactMarket?'Exact event and two-outcome moneyline; both participants independently assessed.':'Exact event/line mapping or a compatible probability model for this market is missing. Soccer draws, spreads, totals and futures require distinct models.'),
   gate('event_state',phaseVerified?'PASS':'FAIL',phaseVerified?`Verified ${phase} evaluation window.`:'Event is started, suspended, final, delayed or its phase is unverified for this model.'),
   gate('research',bothSides&&research.status!=='ERROR'?'PASS':'MISSING',bothSides?'Independent supporting and opposing evidence recorded for both sides.':'Independent AI research for both participants is not available.'),
   gate('source_integrity',uniqueEvidence&&!!input.providerEventId&&fresh(input.retrievedAt,now)&&input.evidence.length>0&&input.evidence.every(e=>evidenceValid(e.id))?'PASS':'MISSING','Requires a unique provider event, uniquely identified evidence, HTTPS citations and fresh observations.'),
-  gate('data_completeness',input.status==='AVAILABLE'&&!input.gaps.length?'PASS':'MISSING',input.gaps.length?input.gaps.join(' '):input.status==='AVAILABLE'?'Required statistical packet is available.':'Required sport-specific statistical packet is incomplete.'),
-  gate('known_risks',input.risks.length?'FAIL':'PASS',input.risks.length?`${input.risks.length} unresolved availability, workload or integrity concerns prevent approval. Review the cited risk details below.`:'No disqualifying risks reported in the verified input packet; separate clearance checks still apply.'),
+  gate('data_completeness',input.status==='AVAILABLE'&&!(input.requiredGaps?.length)?'PASS':'MISSING',input.requiredGaps?.length?input.requiredGaps.join(' '):input.status==='AVAILABLE'?'A verified statistical packet is available; model features, samples, availability and risks are checked independently below.':'Required sport-specific statistical packet is incomplete.'),
+  gate('known_risks',riskBlocked?'FAIL':riskUnknown?'MISSING':'PASS',riskBlocked?'A cited disqualifying risk vetoes approval.':riskUnknown?`${input.risks.length} reported concerns require cited resolution. Unverified injury impact is incomplete evidence, not an automatic rejection or clearance.`:'No unresolved or verified disqualifying risk remains; separate current clearance checks still apply.'),
   gate('model_validation',prediction.status==='VALIDATED'?'PASS':'MISSING',prediction.reason),
  ];
  for(const kind of ['lineup','injuries','workload','environment','integrity','settlement',...(live?['liveState']:[])] as const){
@@ -40,8 +43,9 @@ export function approveGcm(event:MarketEvent,key:MarketKey,research:GcmEvaluatio
   const outcome=market?.outcomes.find(o=>o.name===selection),price=outcome?.price??null,implied=price===null?null:impliedProbability(price);
   const forecast=prediction.forecasts.find(f=>f.selection===selection),assessment=research.sideAssessments?.find(a=>a.selection===selection);
   const probability=forecast?.probability??null;
-  const edge=probability===null||implied===null?null:probability-implied;
-  const expectedReturn=probability===null||price===null||implied===null?null:probability/100*(price>0?price/100:100/-price)-(1-probability/100);
+  const compatibleSettlement=input.settlement==='NO_PUSH_TWO_WAY'&&exactMarket;
+  const edge=probability===null||implied===null||!compatibleSettlement?null:probability-implied;
+  const expectedReturn=probability===null||price===null||implied===null||!compatibleSettlement?null:probability/100*(price>0?price/100:100/-price)-(1-probability/100);
   const cited=assessment&&research.selection===selection&&assessment.supportingEvidenceIds.length>=3&&assessment.supportingEvidenceIds.every(evidenceValid)&&assessment.counterEvidenceIds.every(evidenceValid)&&!assessment.supportingEvidenceIds.some(id=>assessment.counterEvidenceIds.includes(id));
   const directionallySupported=forecast&&forecast.advantages>=Math.max(3,forecast.minimumAdvantages);
   const quoteFresh=!!market&&fresh(market.last_update,now,age);
@@ -51,7 +55,7 @@ export function approveGcm(event:MarketEvent,key:MarketKey,research:GcmEvaluatio
    gate('sport_performance',forecast?(directionallySupported&&forecast.recentFormVerified&&forecast.consistencyVerified&&forecast.sampleVerified?'PASS':'FAIL'):'MISSING',forecast?'Requires the reviewed sport-specific features, minimum samples, consistency, recent form and multiple measured matchup advantages.':'Reviewed sport-specific performance features and sample quality are not validated.'),
    gate('calibrated_estimate',forecast?(numeric?'PASS':'FAIL'):'MISSING',numeric?'Probability and historical calibration band are consistent with a reviewed exact-market model.':'A consistent calibrated estimate and supported uncertainty band are required.'),
    gate('current_price',implied!==null&&quoteFresh?'PASS':'MISSING',implied!==null&&quoteFresh?'Current Fanatics selection price is valid.':'Fresh, valid Fanatics pricing is missing.'),
-   gate('positive_value',edge===null?'MISSING':edge>=policy.minimumEdgePp&&expectedReturn!==null&&expectedReturn>0?'PASS':'FAIL',edge===null?'No validated probability is available to calculate price edge.':`Edge ${edge.toFixed(2)} percentage points; minimum ${policy.minimumEdgePp.toFixed(2)}. Expected return must also be positive.`),
+   gate('positive_value',edge===null?'MISSING':edge>=policy.minimumEdgePp&&expectedReturn!==null&&expectedReturn>0?'PASS':'FAIL',edge===null?'A validated probability and compatible verified settlement contract are required to calculate price edge.':`Edge ${edge.toFixed(2)} percentage points; minimum ${policy.minimumEdgePp.toFixed(2)}. Expected return must also be positive.`),
    gate('uncertainty_value',!forecast||implied===null?'MISSING':forecast.uncertainty.low>implied?'PASS':'FAIL','The historical calibration-band lower bound must exceed raw implied probability; point-estimate edge alone is insufficient.'),
   ];
   const priceInRange=price!==null&&price>=Math.min(policy.priceMin,policy.priceMax)&&price<=Math.max(policy.priceMin,policy.priceMax);

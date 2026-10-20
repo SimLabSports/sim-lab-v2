@@ -7,6 +7,21 @@ const pending=new Map<string,Promise<LiveEvaluation>>();
 const results=new Map<string,LiveEvaluation>();
 const listeners=new Set<()=>void>();
 const identity=(event:MarketEvent,market:MarketKey)=>`${event.sport_key}:${event.id}:${event.commence_time}:${market}:${JSON.stringify(getMarket(event,market)?.outcomes)}`;
+export async function runGcmScan(event:MarketEvent,market:MarketKey){
+ const key=identity(event,market);let task=pending.get(key);
+ if(!task){
+  const cached=results.get(key);
+  if(cached?.gcm&&Date.parse(cached.gcm.expiresAt)>Date.now()&&(!cached.gcm.approval||Date.parse(cached.gcm.approval.expiresAt)>Date.now()))return cached;
+  task=(async()=>{
+   const response=await fetch('/api/gcm/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:event.id,sport:event.sport_key,market}),cache:'no-store',signal:AbortSignal.timeout(65000)});
+   const value=await response.json();if(!response.ok)throw new Error(value.error||'The scan could not be completed.');
+   for(const [id,stored]of results)if(!stored.gcm||Date.parse(stored.gcm.expiresAt)<=Date.now())results.delete(id);
+   if(results.size>=200)results.delete(results.keys().next().value!);
+   results.set(key,value);if(value.gcm?.status==='ERROR')throw new Error(value.gcm.explanation||'Research is unavailable.');return value as LiveEvaluation;
+  })();pending.set(key,task);listeners.forEach(update=>update());
+ }
+ try{return await task;}finally{pending.delete(key);listeners.forEach(update=>update());}
+}
 export function useGcmScan(event:MarketEvent,market:MarketKey){
  const key=identity(event,market);
  const [,refresh]=useState(0);
@@ -14,22 +29,7 @@ export function useGcmScan(event:MarketEvent,market:MarketKey){
  useEffect(()=>{const update=()=>refresh(value=>value+1);listeners.add(update);return()=>{listeners.delete(update);};},[]);
  const run=useCallback(async()=>{
   setError(null);
-  let task=pending.get(key);
-  if(!task){
-   const cached=results.get(key);
-   if(cached?.gcm&&Date.parse(cached.gcm.expiresAt)>Date.now()&&(!cached.gcm.approval||Date.parse(cached.gcm.approval.expiresAt)>Date.now()))return;
-   task=(async()=>{
-    const response=await fetch('/api/gcm/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:event.id,sport:event.sport_key,market}),cache:'no-store',signal:AbortSignal.timeout(65000)});
-    const value=await response.json();
-    if(!response.ok)throw new Error(value.error||'The scan could not be completed.');
-    for(const [id,stored]of results)if(!stored.gcm||Date.parse(stored.gcm.expiresAt)<=Date.now())results.delete(id);
-    if(results.size>=200)results.delete(results.keys().next().value!);
-    results.set(key,value);return value as LiveEvaluation;
-   })();
-   pending.set(key,task);listeners.forEach(update=>update());
-  }
-  try{await task;}catch(reason){setError(reason instanceof Error?reason.message:'Research is unavailable.');}
-  finally{pending.delete(key);listeners.forEach(update=>update());}
+  try{await runGcmScan(event,market);}catch(reason){setError(reason instanceof Error?reason.message:'Research is unavailable.');}
  },[key,event.id,event.sport_key,market]);
  const result=results.get(key);
  const expiry=result?.gcm?.approval?.expiresAt??event.intelligence?.[market]?.gcm?.approval?.expiresAt;

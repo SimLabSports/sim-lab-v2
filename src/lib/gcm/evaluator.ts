@@ -11,7 +11,7 @@ import {admitScan} from './scan-budget';
 import {GREEN_CHECK_RESEARCH_INSTRUCTIONS} from './green-check-instructions';
 import type {GcmEvaluation,ResearchInput} from '../research-types';
 import type {MarketEvent,MarketKey} from '../markets';
-const version='gcm-grounded-research-4';
+const version='gcm-grounded-research-5';
 const sideSchema=z.object({selection:z.string(),supportingEvidenceIds:z.array(z.string()).max(12),counterEvidenceIds:z.array(z.string()).max(12)}).strict();
 const decisionSchema=z.object({selection:z.string().nullable(),assessments:z.array(sideSchema).length(2),riskIndices:z.array(z.number().int().min(0)).max(30)}).strict();
 const busy=new Map<string,Promise<GcmEvaluation>>();

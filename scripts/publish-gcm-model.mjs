@@ -1,0 +1,13 @@
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+const reviewer=process.argv[2];
+if(!reviewer)throw new Error('Supply the actual reviewer identity after reviewing the source and holdout audit.');
+const report=JSON.parse(await readFile('.cache/gcm/baseball_mlb-form-report.json','utf8'));
+const audit=JSON.parse(await readFile('.cache/gcm/baseball_mlb-audit.json','utf8'));
+if(!report.passesEngineeringChecks||!audit.passes||audit.historySha256!==report.model.training.inputSha256||audit.holdoutRecords!==report.counts.holdout||audit.sourceChecks.length!==12||audit.independentFeatureChecks!==40)throw new Error('Publication refused: reproducible model/source audit is incomplete or inconsistent.');
+const registry=JSON.parse(await readFile('data/gcm-reviewed-models.json','utf8'));
+if(registry.some(m=>m.id===report.model.id&&m.version===report.model.version))throw new Error('This version is already published; do not silently overwrite model history.');
+const model={...report.model,review:{...report.model.review,approved:true,reviewer,reviewedAt:new Date().toISOString()}};
+registry.push(model);await writeFile('data/gcm-reviewed-models.json',JSON.stringify(registry,null,2)+'\n');
+await mkdir('data/gcm-validation',{recursive:true});
+await writeFile('data/gcm-validation/mlb-form-v1.json',JSON.stringify({modelId:model.id,version:model.version,counts:report.counts,holdout:report.holdout,baseline:report.baseline,bySeason:report.bySeason,audit,limitations:report.limitations},null,2)+'\n');
+console.log('Published the audited MLB model. This does not waive current GCM approval, market or availability requirements.');

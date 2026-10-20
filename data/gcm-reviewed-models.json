@@ -1,1 +1,172 @@
-[]
+[
+  {
+    "kind": "WIN_LOGISTIC",
+    "id": "mlb-official-scoring-form",
+    "version": "1",
+    "sport": "baseball_mlb",
+    "market": "h2h",
+    "phase": "PREGAME",
+    "targetDefinition": "homeWin",
+    "features": [
+      {
+        "metric": "verified recent scoring mean",
+        "group": "EFFICIENCY",
+        "direction": 1,
+        "minimumValue": 1.666,
+        "maximumValue": 7.95
+      },
+      {
+        "metric": "verified recent opponent scoring mean",
+        "group": "MATCHUP",
+        "direction": -1,
+        "minimumValue": 1.45,
+        "maximumValue": 8.65
+      },
+      {
+        "metric": "verified recent scoring margin",
+        "group": "RECENT_FORM",
+        "direction": 0,
+        "minimumValue": -5.05,
+        "maximumValue": 5.8
+      },
+      {
+        "metric": "verified recent margin deviation",
+        "group": "CONSISTENCY",
+        "direction": -1,
+        "minimumValue": 1.64,
+        "maximumValue": 8.417
+      },
+      {
+        "metric": "verified recent completed sample",
+        "group": "SAMPLE",
+        "direction": 0,
+        "minimumValue": 10,
+        "maximumValue": 20,
+        "minimumSample": 10
+      },
+      {
+        "metric": "verified schedule rest days",
+        "group": "CONTEXT",
+        "direction": 1,
+        "minimumValue": 0,
+        "maximumValue": 8
+      }
+    ],
+    "fit": {
+      "weights": [
+        0.14806078544210036,
+        0.024653515197100795,
+        -0.11977067461253259,
+        0.09732719398472406,
+        0.014727054502397861,
+        0.012191630508843572,
+        0.016785564720011952
+      ],
+      "mean": [
+        -0.0038725404665959588,
+        0.008896837736423512,
+        -0.012769378203019545,
+        0.0029982339760441677,
+        -0.003793909420412588,
+        0.011517225026252497
+      ],
+      "scale": [
+        1.1386314181112849,
+        1.2126318529396716,
+        1.7806842564549255,
+        1.0525417632676686,
+        0.48769885916889305,
+        0.34589954293217423
+      ]
+    },
+    "calibrator": {
+      "weights": [
+        0.11134696844641943,
+        0.19762231303769517
+      ],
+      "mean": [
+        0.14821192293226002
+      ],
+      "scale": [
+        0.2061885068660691
+      ]
+    },
+    "minimumAdvantages": 3,
+    "minimumBinSample": 50,
+    "training": {
+      "train": 29521,
+      "calibration": 2233,
+      "holdout": 4304,
+      "trainBefore": "2024-01-01T00:00:00.000Z",
+      "calibrationBefore": "2025-01-01T00:00:00.000Z",
+      "settledThrough": "2026-10-15T04:11:00.000Z",
+      "inputSha256": "4cbd51eddeb82854b274a3dc4dbcb448afa51f71fba27cbc12125c17abd0eaba"
+    },
+    "holdout": {
+      "brier": 0.24650920992270167,
+      "logLoss": 0.6860838419084205,
+      "calibrationError": 0.018852383243206,
+      "bins": [
+        {
+          "count": 0,
+          "meanProbability": null,
+          "observedFrequency": null
+        },
+        {
+          "count": 0,
+          "meanProbability": null,
+          "observedFrequency": null
+        },
+        {
+          "count": 0,
+          "meanProbability": null,
+          "observedFrequency": null
+        },
+        {
+          "count": 51,
+          "meanProbability": 0.3777298486289625,
+          "observedFrequency": 0.23529411764705882
+        },
+        {
+          "count": 1175,
+          "meanProbability": 0.4686235722458618,
+          "observedFrequency": 0.5029787234042553
+        },
+        {
+          "count": 2716,
+          "meanProbability": 0.5434783374189115,
+          "observedFrequency": 0.5353460972017673
+        },
+        {
+          "count": 361,
+          "meanProbability": 0.6240547356213256,
+          "observedFrequency": 0.6537396121883656
+        },
+        {
+          "count": 1,
+          "meanProbability": 0.7057277171040883,
+          "observedFrequency": 0
+        },
+        {
+          "count": 0,
+          "meanProbability": null,
+          "observedFrequency": null
+        },
+        {
+          "count": 0,
+          "meanProbability": null,
+          "observedFrequency": null
+        }
+      ],
+      "baselineBrier": 0.24894100401069194,
+      "baselineLogLoss": 0.6910277926909348
+    },
+    "review": {
+      "approved": true,
+      "reviewer": "Codex code/statistical audit; reproducible source and chronological holdout checks",
+      "reference": "https://github.com/SimLabSports/sim-lab-v2/blob/main/docs/gcm-model-validation.md",
+      "reviewedAt": "2026-10-20T20:39:03.234Z",
+      "expiresAt": "2026-11-19T20:38:25.280Z"
+    }
+  }
+]

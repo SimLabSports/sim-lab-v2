@@ -1,6 +1,8 @@
 import 'server-only';
 import { z } from 'zod';
 import { providerJson } from '../server/provider-http';
+import {completedMlbGame} from './mlb-history';
+import {formFeatures,rollingForm} from '../gcm/form-features';
 import type { MarketEvent } from '../markets';
 import type { ResearchInput, Evidence } from '../research-types';
 const base='https://statsapi.mlb.com/api/v1/';
@@ -10,7 +12,8 @@ const game=z.object({gamePk:z.number(),gameDate:z.string(),season:z.string().opt
 const scheduleSchema=z.object({dates:z.array(z.object({games:z.array(game)}))});
 const nameKey=(name:string)=>name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'').replace(/^oaklandathletics$/,'athletics');
 function dateET(date:number|string){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(date));}
-async function request<T>(resource:string,validate:(data:unknown)=>T,ttl=300000){return providerJson({provider:'MLB Stats API',cacheKey:'mlb:'+resource,url:base+resource,ttl,validate});}
+const observedByResource=new Map<string,string>();
+async function request<T>(resource:string,validate:(data:unknown)=>T,ttl=300000){const response=await providerJson({provider:'MLB Stats API',cacheKey:'mlb-v2:'+resource,url:base+resource,ttl,validate:data=>({value:validate(data),observedAt:new Date().toISOString()})});if(observedByResource.size>500)observedByResource.clear();observedByResource.set(resource,response.observedAt);return response.value;}
 export async function mlbSchedule(date:string){
  const resource=`schedule?sportId=1&date=${date}&hydrate=probablePitcher,team`;
  const result=await request(resource,data=>scheduleSchema.parse(data));
@@ -26,7 +29,7 @@ export async function mlbResearch(event:MarketEvent):Promise<ResearchInput>{
   const matched=matches[0];input.providerEventId=String(matched.gamePk);
   input.pregame=matched.status.abstractGameState==='Preview'&&Date.now()<Date.parse(matched.gameDate)&&!/(postpon|delay|cancel|suspend)/i.test(matched.status.detailedState);
   if(!input.pregame)input.risks.push(`Pregame evaluation unavailable: official game state is ${matched.status.detailedState}.`);
-  const add=(entity:string,metric:string,value:string|number,url:string,period:string)=>input.evidence.push({id:`e${input.evidence.length+1}`,entity,metric,value,sourceUrl:base+url,observedAt:input.retrievedAt,period});
+  const add=(entity:string,metric:string,value:string|number,url:string,period:string)=>input.evidence.push({id:`e${input.evidence.length+1}`,entity,metric,value,sourceUrl:base+url,observedAt:observedByResource.get(url)??input.retrievedAt,period});
   add('event','official game state',matched.status.detailedState,resource,'current');
   const season=matched.season||String(new Date(matched.gameDate).getUTCFullYear());
   const statsSchema=z.object({stats:z.array(z.object({group:z.object({displayName:z.string()}).optional(),splits:z.array(z.object({stat:z.record(z.string(),z.unknown())})).optional()}))});
@@ -51,6 +54,16 @@ export async function mlbResearch(event:MarketEvent):Promise<ResearchInput>{
     }else input.gaps.push(`No recent completed games found for ${target.name}.`);
    }
   }catch{input.gaps.push('Recent results and rest schedule could not be verified.');}
+  const formUrl=`schedule?sportId=1&teamId=${matched.teams.home.team.id},${matched.teams.away.team.id}&startDate=${dateET(Date.parse(matched.gameDate)-90*86400000)}&endDate=${dateET(Math.min(Date.now(),Date.parse(matched.gameDate)))}&hydrate=gameInfo`;
+  try{
+   const history=await request(formUrl,data=>z.object({dates:z.array(z.object({games:z.array(z.unknown())}))}).parse(data));
+   const games=history.dates.flatMap(d=>d.games).map(g=>completedMlbGame(g,base+formUrl)).filter((g):g is NonNullable<typeof g>=>!!g);
+   for(const target of [matched.teams.home.team,matched.teams.away.team]){
+    const form=rollingForm(games,String(target.id),Number(season),Date.parse(matched.gameDate));
+    if(!form){input.gaps.push(`Fewer than ten verified completed games with completion bounds are available for ${target.name}.`);continue;}
+    formFeatures.forEach((feature,index)=>add(target.name,feature.metric,form.values[index],formUrl,`${form.gameIds.length} completed games; season ${season}; completion bounds precede matchup`));
+   }
+  }catch{input.gaps.push('The live feature packet for the calibrated scoring-form model could not be verified.');}
   input.gaps.push('Confirmed batting lineups, comprehensive injury availability, bullpen workloads, and park/weather adjustments are not verified by this adapter.');
   input.status=input.evidence.length>4?'AVAILABLE':'INCOMPLETE';
  }catch{input.status='ERROR';input.gaps.push('The official MLB statistics provider could not return valid current data.');}
