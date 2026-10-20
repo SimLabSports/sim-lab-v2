@@ -1,0 +1,856 @@
+{
+  "checkedAt": "2026-10-20T21:23:16.027Z",
+  "auditScope": "Real public source requests matched to actual current Odds API market events. Data availability is not official approval. No AI predictions or synthetic fixtures are included.",
+  "sports": [
+    {
+      "sport": "basketball_nba",
+      "eventId": "2b042ddad3d3c6c6fe5b7005dc26c775",
+      "event": {
+        "home": "New York Knicks",
+        "away": "Philadelphia 76ers",
+        "start": "2026-10-20T23:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:14.133Z",
+      "status": "INCOMPLETE",
+      "provider": "ESPN NBA",
+      "providerEventId": "basketball/nba:401909089",
+      "evidenceCount": 6,
+      "entityCounts": [
+        {
+          "name": "New York Knicks",
+          "count": 0
+        },
+        {
+          "name": "Philadelphia 76ers",
+          "count": 5
+        }
+      ],
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=20261020&limit=1000",
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=401909089"
+      ],
+      "metrics": [
+        "reported player availability"
+      ],
+      "gaps": [
+        "No completed current-season recent results for New York Knicks; prior seasons are not relabeled as current form.",
+        "Current-season efficiency statistics/sample could not be verified for New York Knicks.",
+        "No completed current-season recent results for Philadelphia 76ers; prior seasons are not relabeled as current form.",
+        "Current-season efficiency statistics/sample could not be verified for Philadelphia 76ers.",
+        "possession-based offensive/defensive ratings and pace: complete current verification is still required.",
+        "confirmed rotations, minutes and usage: complete current verification is still required.",
+        "player availability and schedule fatigue: complete current verification is still required.",
+        "Bookmaker settlement and independently validated sport/market probability remain required for official approval."
+      ],
+      "identity": {
+        "eventId": "2b042ddad3d3c6c6fe5b7005dc26c775",
+        "sport": "basketball_nba",
+        "startTime": "2026-10-20T23:00:00Z",
+        "participants": [
+          {
+            "name": "New York Knicks",
+            "key": "newyorkknicks"
+          },
+          {
+            "name": "Philadelphia 76ers",
+            "key": "philadelphia76ers"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "ESPN NBA",
+            "eventId": "basketball/nba:401909089"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 46,
+        "priced": 18,
+        "checkedAt": "2026-10-20T21:23:14.133Z"
+      }
+    },
+    {
+      "sport": "americanfootball_nfl",
+      "eventId": "ffebea881c1d7b2dfb85b3e590c35985",
+      "event": {
+        "home": "Chicago Bears",
+        "away": "New England Patriots",
+        "start": "2026-10-23T00:15:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:14.310Z",
+      "status": "AVAILABLE",
+      "provider": "ESPN NFL",
+      "providerEventId": "401873010",
+      "evidenceCount": 61,
+      "entityCounts": [
+        {
+          "name": "Chicago Bears",
+          "count": 30
+        },
+        {
+          "name": "New England Patriots",
+          "count": 30
+        }
+      ],
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=20261022",
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/17/schedule?season=2026&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/3/schedule?season=2026&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/17/statistics?season=2026&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/3/statistics?season=2026&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401873010"
+      ],
+      "metrics": [
+        "season completed games sample",
+        "season completed games record (wins-losses-ties)",
+        "season completed games points per game",
+        "season completed games points allowed per game",
+        "last five completed games sample",
+        "last five completed games record (wins-losses-ties)",
+        "last five completed games points per game",
+        "last five completed games points allowed per game",
+        "full rest days since last completed game",
+        "passing completionPct",
+        "passing netPassingYardsPerGame",
+        "passing yardsPerPassAttempt",
+        "passing passingTouchdowns",
+        "passing interceptions",
+        "passing QBRating",
+        "rushing rushingYardsPerGame",
+        "rushing yardsPerRushAttempt",
+        "rushing rushingTouchdowns",
+        "miscellaneous thirdDownConvPct",
+        "miscellaneous redzoneTouchdownPct",
+        "miscellaneous turnOverDifferential",
+        "defensive sacks",
+        "defensive tacklesForLoss",
+        "general gamesPlayed",
+        "scoring totalPointsPerGame",
+        "reported player availability"
+      ],
+      "gaps": [
+        "Final active rosters, starting quarterbacks, comprehensive injury clearance, workload, opponent-adjusted EPA, line matchups, weather and settlement rules remain unverified. Public injury reports do not confirm availability."
+      ],
+      "identity": {
+        "eventId": "ffebea881c1d7b2dfb85b3e590c35985",
+        "sport": "americanfootball_nfl",
+        "startTime": "2026-10-23T00:15:00Z",
+        "participants": [
+          {
+            "name": "Chicago Bears",
+            "key": "chicagobears"
+          },
+          {
+            "name": "New England Patriots",
+            "key": "newenglandpatriots"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "ESPN NFL",
+            "eventId": "401873010"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 28,
+        "priced": 13,
+        "checkedAt": "2026-10-20T21:23:14.310Z"
+      }
+    },
+    {
+      "sport": "basketball_wnba",
+      "eventId": "a5450dc8703801dde0f6ec5ca4de904a",
+      "event": {
+        "home": "Atlanta Dream",
+        "away": "Golden State Valkyries",
+        "start": "2026-10-22T00:10:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:14.761Z",
+      "status": "AVAILABLE",
+      "provider": "ESPN WNBA",
+      "providerEventId": "basketball/wnba:401918307",
+      "evidenceCount": 43,
+      "entityCounts": [
+        {
+          "name": "Atlanta Dream",
+          "count": 21
+        },
+        {
+          "name": "Golden State Valkyries",
+          "count": 21
+        }
+      ],
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=20261021&limit=1000",
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/20/schedule?season=2026&seasontype=3",
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/20/statistics?season=2026&seasontype=3",
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/129689/schedule?season=2026&seasontype=3",
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/129689/statistics?season=2026&seasontype=3"
+      ],
+      "metrics": [
+        "verified recent completed sample",
+        "recent wins-losses-draws",
+        "recent points scored mean",
+        "recent points allowed mean",
+        "home recent scoring margin mean",
+        "away recent scoring margin mean",
+        "schedule rest days since last start",
+        "basketball avgRebounds",
+        "basketball assistTurnoverRatio",
+        "basketball gamesPlayed",
+        "basketball freeThrowPct",
+        "basketball threePointPct",
+        "basketball avgPoints",
+        "basketball avgOffensiveRebounds",
+        "basketball avgAssists",
+        "basketball avgTurnovers",
+        "basketball scoringEfficiency",
+        "basketball shootingEfficiency",
+        "basketball fieldGoalPct",
+        "basketball threePointFieldGoalPct",
+        "basketball avgDefensiveRebounds"
+      ],
+      "gaps": [
+        "possession-based offensive/defensive ratings and pace: complete current verification is still required.",
+        "confirmed rotations, minutes and usage: complete current verification is still required.",
+        "player availability and schedule fatigue: complete current verification is still required.",
+        "Bookmaker settlement and independently validated sport/market probability remain required for official approval."
+      ],
+      "identity": {
+        "eventId": "a5450dc8703801dde0f6ec5ca4de904a",
+        "sport": "basketball_wnba",
+        "startTime": "2026-10-22T00:10:00Z",
+        "participants": [
+          {
+            "name": "Atlanta Dream",
+            "key": "atlantadream"
+          },
+          {
+            "name": "Golden State Valkyries",
+            "key": "goldenstatevalkyries"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "ESPN WNBA",
+            "eventId": "basketball/wnba:401918307"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 1,
+        "priced": 1,
+        "checkedAt": "2026-10-20T21:23:14.761Z"
+      }
+    },
+    {
+      "sport": "icehockey_nhl",
+      "eventId": "84e20520cdbf52c71dfe697e7f789b86",
+      "event": {
+        "home": "New York Islanders",
+        "away": "Anaheim Ducks",
+        "start": "2026-10-20T23:10:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:15.269Z",
+      "status": "AVAILABLE",
+      "provider": "ESPN NHL",
+      "providerEventId": "hockey/nhl:401892541",
+      "evidenceCount": 20,
+      "entityCounts": [
+        {
+          "name": "New York Islanders",
+          "count": 11
+        },
+        {
+          "name": "Anaheim Ducks",
+          "count": 8
+        }
+      ],
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20261020&limit=1000",
+        "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/12/schedule?season=2027&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/25/schedule?season=2027&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/summary?event=401892541"
+      ],
+      "metrics": [
+        "verified recent completed sample",
+        "recent wins-losses-draws",
+        "recent goals scored mean",
+        "recent goals allowed mean",
+        "home recent scoring margin mean",
+        "away recent scoring margin mean",
+        "schedule rest days since last start",
+        "reported player availability"
+      ],
+      "gaps": [
+        "Current-season efficiency statistics/sample could not be verified for Anaheim Ducks.",
+        "Current-season efficiency statistics/sample could not be verified for New York Islanders.",
+        "confirmed starting goalies: complete current verification is still required.",
+        "expected goals and shot quality: complete current verification is still required.",
+        "power play/penalty kill and availability: complete current verification is still required.",
+        "Bookmaker settlement and independently validated sport/market probability remain required for official approval."
+      ],
+      "identity": {
+        "eventId": "84e20520cdbf52c71dfe697e7f789b86",
+        "sport": "icehockey_nhl",
+        "startTime": "2026-10-20T23:10:00Z",
+        "participants": [
+          {
+            "name": "New York Islanders",
+            "key": "newyorkislanders"
+          },
+          {
+            "name": "Anaheim Ducks",
+            "key": "anaheimducks"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "ESPN NHL",
+            "eventId": "hockey/nhl:401892541"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 13,
+        "priced": 13,
+        "checkedAt": "2026-10-20T21:23:15.269Z"
+      }
+    },
+    {
+      "sport": "baseball_mlb",
+      "eventId": "e4c03eec29795f56b6b06c313d3af271",
+      "event": {
+        "home": "Milwaukee Brewers",
+        "away": "Tampa Bay Rays",
+        "start": "2026-10-24T00:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:15.472Z",
+      "status": "AVAILABLE",
+      "provider": "MLB Stats API",
+      "providerEventId": "849805",
+      "evidenceCount": 67,
+      "entityCounts": [
+        {
+          "name": "Milwaukee Brewers",
+          "count": 33
+        },
+        {
+          "name": "Tampa Bay Rays",
+          "count": 33
+        }
+      ],
+      "sourceUrls": [
+        "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-10-23&hydrate=probablePitcher,team",
+        "https://statsapi.mlb.com/api/v1/teams/139/stats?stats=season&group=hitting,pitching&season=2026",
+        "https://statsapi.mlb.com/api/v1/teams/158/stats?stats=season&group=hitting,pitching&season=2026",
+        "https://statsapi.mlb.com/api/v1/schedule?sportId=1&startDate=2026-09-20&endDate=2026-10-20",
+        "https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=158,139&startDate=2026-07-25&endDate=2026-10-20&hydrate=gameInfo"
+      ],
+      "metrics": [
+        "hitting gamesPlayed",
+        "hitting runs",
+        "hitting hits",
+        "hitting homeRuns",
+        "hitting baseOnBalls",
+        "hitting strikeOuts",
+        "hitting avg",
+        "hitting obp",
+        "hitting slg",
+        "hitting ops",
+        "pitching gamesPlayed",
+        "pitching runs",
+        "pitching hits",
+        "pitching homeRuns",
+        "pitching baseOnBalls",
+        "pitching strikeOuts",
+        "pitching avg",
+        "pitching obp",
+        "pitching slg",
+        "pitching ops",
+        "pitching era",
+        "pitching whip",
+        "pitching inningsPitched",
+        "last five completed games record",
+        "full rest days since last game",
+        "recent home wins / games",
+        "recent away wins / games",
+        "verified recent scoring mean",
+        "verified recent opponent scoring mean",
+        "verified recent scoring margin",
+        "verified recent margin deviation",
+        "verified recent completed sample",
+        "verified schedule rest days"
+      ],
+      "gaps": [
+        "Probable pitcher not verified for Tampa Bay Rays.",
+        "Probable pitcher not verified for Milwaukee Brewers.",
+        "Confirmed batting lineups, comprehensive injury availability, bullpen workloads, and park/weather adjustments are not verified by this adapter."
+      ],
+      "identity": {
+        "eventId": "e4c03eec29795f56b6b06c313d3af271",
+        "sport": "baseball_mlb",
+        "startTime": "2026-10-24T00:00:00Z",
+        "participants": [
+          {
+            "name": "Milwaukee Brewers",
+            "key": "milwaukeebrewers"
+          },
+          {
+            "name": "Tampa Bay Rays",
+            "key": "tampabayrays"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "MLB Stats API",
+            "eventId": "849805"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 1,
+        "priced": 0,
+        "checkedAt": "2026-10-20T21:23:15.472Z"
+      }
+    },
+    {
+      "sport": "americanfootball_ncaaf",
+      "eventId": "dc65142bf9a0e7652a252b2074037efa",
+      "event": {
+        "home": "Delaware Blue Hens",
+        "away": "Missouri State Bears",
+        "start": "2026-10-20T23:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:15.550Z",
+      "status": "AVAILABLE",
+      "provider": "ESPN NCAA Football",
+      "providerEventId": "football/college-football:401871069",
+      "evidenceCount": 47,
+      "entityCounts": [
+        {
+          "name": "Delaware Blue Hens",
+          "count": 23
+        },
+        {
+          "name": "Missouri State Bears",
+          "count": 23
+        }
+      ],
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20261020&limit=1000&groups=80",
+        "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/48/schedule?season=2026&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/2623/schedule?season=2026&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/48/statistics?season=2026&seasontype=2",
+        "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/2623/statistics?season=2026&seasontype=2"
+      ],
+      "metrics": [
+        "verified recent completed sample",
+        "recent wins-losses-draws",
+        "recent points scored mean",
+        "recent points allowed mean",
+        "home recent scoring margin mean",
+        "away recent scoring margin mean",
+        "schedule rest days since last start",
+        "football completionPct",
+        "football netPassingYardsPerGame",
+        "football QBRating",
+        "football sacks",
+        "football yardsPerPassAttempt",
+        "football totalPointsPerGame",
+        "football yardsPerRushAttempt",
+        "football rushingYardsPerGame",
+        "football thirdDownConvPct",
+        "football redzoneTouchdownPct",
+        "football turnOverDifferential",
+        "football gamesPlayed"
+      ],
+      "gaps": [
+        "opponent-adjusted EPA and success rate: complete current verification is still required.",
+        "confirmed QB and active roster: complete current verification is still required.",
+        "line matchup and defensive efficiency: complete current verification is still required.",
+        "injury impact, workload and weather: complete current verification is still required.",
+        "Bookmaker settlement and independently validated sport/market probability remain required for official approval."
+      ],
+      "identity": {
+        "eventId": "dc65142bf9a0e7652a252b2074037efa",
+        "sport": "americanfootball_ncaaf",
+        "startTime": "2026-10-20T23:00:00Z",
+        "participants": [
+          {
+            "name": "Delaware Blue Hens",
+            "key": "delawarebluehens"
+          },
+          {
+            "name": "Missouri State Bears",
+            "key": "missouristatebears"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "ESPN NCAA Football",
+            "eventId": "football/college-football:401871069"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 56,
+        "priced": 56,
+        "checkedAt": "2026-10-20T21:23:15.550Z"
+      }
+    },
+    {
+      "sport": "tennis_wta_ningbo_open",
+      "eventId": "76669208f3d3fcdc0c8e043df5ab46ab",
+      "event": {
+        "home": "Marie Bouzkova",
+        "away": "Anastasia Zakharova",
+        "start": "2026-10-21T05:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:15.624Z",
+      "status": "AVAILABLE",
+      "provider": "ESPN WTA",
+      "providerEventId": "tennis/wta:963-2026:185542",
+      "evidenceCount": 10,
+      "entityCounts": [
+        {
+          "name": "Marie Bouzkova",
+          "count": 4
+        },
+        {
+          "name": "Anastasia Zakharova",
+          "count": 4
+        }
+      ],
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard"
+      ],
+      "metrics": [
+        "completed current-draw singles sample",
+        "current-draw recorded wins",
+        "current-draw games won",
+        "current-draw games conceded"
+      ],
+      "gaps": [
+        "verified surface and surface-specific history: verified coverage remains incomplete.",
+        "hold/break and serve/return statistics: verified coverage remains incomplete.",
+        "fitness, fatigue and retirement settlement: verified coverage remains incomplete.",
+        "Retirements, draws/no-contests and bookmaker-specific void rules need compatible market settlement and historical validation."
+      ],
+      "identity": {
+        "eventId": "76669208f3d3fcdc0c8e043df5ab46ab",
+        "sport": "tennis_wta_ningbo_open",
+        "startTime": "2026-10-21T05:00:00Z",
+        "participants": [
+          {
+            "name": "Marie Bouzkova",
+            "key": "mariebouzkova"
+          },
+          {
+            "name": "Anastasia Zakharova",
+            "key": "anastasiazakharova"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "ESPN WTA",
+            "eventId": "tennis/wta:963-2026:185542"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 8,
+        "priced": 8,
+        "checkedAt": "2026-10-20T21:23:15.624Z"
+      }
+    },
+    {
+      "sport": "mma_mixed_martial_arts",
+      "eventId": "00af4d1783cc8c0b81a7ebab37e33b70",
+      "event": {
+        "home": "Igor Michaliszyn",
+        "away": "Tomasz Romanowski",
+        "start": "2026-10-21T10:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:15.660Z",
+      "status": "INCOMPLETE",
+      "provider": "ESPN UFC / MMA",
+      "providerEventId": null,
+      "evidenceCount": 0,
+      "entityCounts": [
+        {
+          "name": "Igor Michaliszyn",
+          "count": 0
+        },
+        {
+          "name": "Tomasz Romanowski",
+          "count": 0
+        }
+      ],
+      "sourceUrls": [],
+      "metrics": [],
+      "gaps": [
+        "No unique, exact participant pair and scheduled start could be verified in the current source. Other MMA promotions, doubles, and ambiguous tournament matches are not substituted."
+      ],
+      "identity": {
+        "eventId": "00af4d1783cc8c0b81a7ebab37e33b70",
+        "sport": "mma_mixed_martial_arts",
+        "startTime": "2026-10-21T10:00:00Z",
+        "participants": [
+          {
+            "name": "Igor Michaliszyn",
+            "key": "igormichaliszyn"
+          },
+          {
+            "name": "Tomasz Romanowski",
+            "key": "tomaszromanowski"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": []
+      },
+      "marketSnapshot": {
+        "events": 41,
+        "priced": 0,
+        "checkedAt": "2026-10-20T21:23:15.660Z"
+      }
+    },
+    {
+      "sport": "soccer_epl",
+      "eventId": "d0202960708a442401d7fc7bd74a0183",
+      "event": {
+        "home": "Ipswich Town",
+        "away": "Nottingham Forest",
+        "start": "2026-10-23T19:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:15.943Z",
+      "status": "AVAILABLE",
+      "provider": "ESPN Soccer",
+      "providerEventId": "soccer/eng.1:401879253",
+      "evidenceCount": 23,
+      "entityCounts": [
+        {
+          "name": "Ipswich Town",
+          "count": 11
+        },
+        {
+          "name": "Nottingham Forest",
+          "count": 11
+        }
+      ],
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard?dates=20261023&limit=1000",
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams/373/schedule?season=2026",
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams/393/schedule?season=2026",
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary?event=401879253"
+      ],
+      "metrics": [
+        "verified recent completed sample",
+        "recent wins-losses-draws",
+        "recent goals scored mean",
+        "recent goals allowed mean",
+        "home recent scoring margin mean",
+        "away recent scoring margin mean",
+        "schedule rest days since last start",
+        "soccer season goalDifference",
+        "soccer season totalGoals",
+        "soccer season goalAssists",
+        "soccer season goalsConceded"
+      ],
+      "gaps": [
+        "xG/xGA and home/away strength: complete current verification is still required.",
+        "confirmed starting eleven and tactical matchup: complete current verification is still required.",
+        "draw-aware regulation-time calibration: complete current verification is still required.",
+        "Bookmaker settlement and independently validated sport/market probability remain required for official approval."
+      ],
+      "identity": {
+        "eventId": "d0202960708a442401d7fc7bd74a0183",
+        "sport": "soccer_epl",
+        "startTime": "2026-10-23T19:00:00Z",
+        "participants": [
+          {
+            "name": "Ipswich Town",
+            "key": "ipswichtown"
+          },
+          {
+            "name": "Nottingham Forest",
+            "key": "nottinghamforest"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": [
+          {
+            "provider": "ESPN Soccer",
+            "eventId": "soccer/eng.1:401879253"
+          }
+        ]
+      },
+      "marketSnapshot": {
+        "events": 20,
+        "priced": 20,
+        "checkedAt": "2026-10-20T21:23:15.943Z"
+      }
+    },
+    {
+      "sport": "boxing_boxing",
+      "eventId": "0d58a165c605e8a78daa0c3d12944c7f",
+      "event": {
+        "home": "Shannon Ryan",
+        "away": "Emma Dolan",
+        "start": "2026-10-24T16:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:15.943Z",
+      "status": "INCOMPLETE",
+      "provider": "Not connected",
+      "providerEventId": null,
+      "evidenceCount": 0,
+      "entityCounts": [
+        {
+          "name": "Shannon Ryan",
+          "count": 0
+        },
+        {
+          "name": "Emma Dolan",
+          "count": 0
+        }
+      ],
+      "sourceUrls": [],
+      "metrics": [],
+      "gaps": [
+        "No verified individual-sport source is available for this competition. Boxing needs a separately verified bout/performance feed."
+      ],
+      "identity": {
+        "eventId": "0d58a165c605e8a78daa0c3d12944c7f",
+        "sport": "boxing_boxing",
+        "startTime": "2026-10-24T16:00:00Z",
+        "participants": [
+          {
+            "name": "Shannon Ryan",
+            "key": "shannonryan"
+          },
+          {
+            "name": "Emma Dolan",
+            "key": "emmadolan"
+          }
+        ],
+        "identityVersion": 1,
+        "providerBindings": []
+      },
+      "marketSnapshot": {
+        "events": 35,
+        "priced": 0,
+        "checkedAt": "2026-10-20T21:23:15.943Z"
+      }
+    },
+    {
+      "sport": "golf_masters_tournament_winner",
+      "eventId": "77f6d48378a49cebcb5f569ce759f4f1",
+      "event": {
+        "home": null,
+        "away": null,
+        "start": "2027-04-08T11:00:00Z"
+      },
+      "checkedAt": "2026-10-20T21:23:16.027Z",
+      "status": "INCOMPLETE",
+      "provider": "ESPN Golf",
+      "providerEventId": null,
+      "evidenceCount": 0,
+      "entityCounts": [
+        {
+          "name": "",
+          "count": 0
+        },
+        {
+          "name": "",
+          "count": 0
+        }
+      ],
+      "sourceUrls": [],
+      "metrics": [],
+      "gaps": [
+        "A PGA scoreboard is available, but an exact tournament/field-to-outright mapping, strokes-gained history and multi-runner/dead-heat model are not implemented. No two-team probabilities are applied to golf."
+      ],
+      "identity": {
+        "eventId": "77f6d48378a49cebcb5f569ce759f4f1",
+        "sport": "golf_masters_tournament_winner",
+        "startTime": "2027-04-08T11:00:00Z",
+        "participants": [],
+        "identityVersion": 1,
+        "providerBindings": []
+      },
+      "marketSnapshot": {
+        "events": 1,
+        "priced": 0,
+        "checkedAt": "2026-10-20T21:23:16.027Z"
+      }
+    },
+    {
+      "sport": "basketball_ncaab",
+      "checkedAt": "2026-10-20T21:23:37.991Z",
+      "status": "SCHEDULE_SCHEMA_VERIFIED_ONLY",
+      "provider": "ESPN basketball/mens-college-basketball",
+      "providerEventId": null,
+      "evidenceCount": 0,
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard"
+      ],
+      "metrics": [],
+      "gaps": [
+        "Public competition schedule responded; no current matching Odds API event was available in this audit. Research adapter availability is not a verified matchup or model."
+      ],
+      "marketSnapshot": {
+        "events": 0,
+        "priced": 0,
+        "checkedAt": "2026-10-20T21:23:37.994Z"
+      }
+    },
+    {
+      "sport": "basketball_wncaab",
+      "checkedAt": "2026-10-20T21:23:38.221Z",
+      "status": "SCHEDULE_SCHEMA_VERIFIED_ONLY",
+      "provider": "ESPN basketball/womens-college-basketball",
+      "providerEventId": null,
+      "evidenceCount": 0,
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/womens-college-basketball/scoreboard"
+      ],
+      "metrics": [],
+      "gaps": [
+        "Public competition schedule responded; no current matching Odds API event was available in this audit. Research adapter availability is not a verified matchup or model."
+      ],
+      "marketSnapshot": {
+        "events": 0,
+        "priced": 0,
+        "checkedAt": "2026-10-20T21:23:38.221Z"
+      }
+    },
+    {
+      "sport": "tennis_atp_*",
+      "checkedAt": "2026-10-20T21:23:38.327Z",
+      "status": "SCHEDULE_SCHEMA_VERIFIED_ONLY",
+      "provider": "ESPN tennis/atp",
+      "providerEventId": null,
+      "evidenceCount": 0,
+      "sourceUrls": [
+        "https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard"
+      ],
+      "metrics": [],
+      "gaps": [
+        "Public competition schedule responded; no current matching Odds API event was available in this audit. Research adapter availability is not a verified matchup or model."
+      ],
+      "marketSnapshot": {
+        "events": 0,
+        "priced": 0,
+        "checkedAt": "2026-10-20T21:23:38.327Z"
+      }
+    }
+  ]
+}

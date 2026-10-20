@@ -21,6 +21,7 @@ export async function getMarketData(sportKey='all'):Promise<MarketResponse>{
   const catalog=await oddsRequest('sports',{},data=>catalogSchema.parse(data),21600000);
   const active=catalog.filter(item=>item.active&&item.group!=='Politics');
   if(sportKey==='soccer')sportKey=active.find(item=>item.key==='soccer_epl')?.key||active.find(item=>item.group==='Soccer'&&!item.has_outrights)?.key||'soccer_unavailable';
+  if(sportKey==='golf')sportKey=active.find(item=>item.group==='Golf'&&item.has_outrights)?.key||'golf_unavailable';
   if(sportKey==='tennis')sportKey=active.find(item=>item.group==='Tennis'&&!item.has_outrights)?.key||'tennis_unavailable';
   if(sportKey!=='all'&&!active.some(item=>item.key===sportKey))throw new ProviderError('The Odds API','SPORT_UNAVAILABLE','This league is not active in the provider catalog.',404);
   const selected=sportKey==='all'?active:active.filter(item=>item.key===sportKey);

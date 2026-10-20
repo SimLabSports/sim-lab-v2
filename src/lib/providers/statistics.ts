@@ -4,6 +4,10 @@ import { mlbResearch } from './mlb';
 import { nflResearch } from './nfl';
 import {ballDontLieResearch} from './balldontlie';
 import {bdlSport,bdlEventDataSports} from './balldontlie-sports';
+import {sportProfile} from '../sport-profiles';
+import {eventIdentity} from '../event-identity';
+import {espnTeamResearch} from './espn-team';
+import {espnIndividualResearch} from './espn-individual';
 import { providerJson } from '../server/provider-http';
 import type { ResearchInput } from '../research-types';
 import type { MarketEvent } from '../markets';
@@ -47,14 +51,19 @@ async function legacyStatistics(event:MarketEvent):Promise<ResearchInput>{
 }
 
 export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
- const bdl=bdlSport(event.sport_key);
- if(!process.env.BALLDONTLIE_API_KEY||!bdl||!bdlEventDataSports.has(bdl))return legacyStatistics(event);
- const hasPrimary=['baseball_mlb','americanfootball_nfl'].includes(event.sport_key)||Object.values(sports).some(sport=>!!keyFor(sport)&&sports[event.sport_key]===sport&&process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true');
- const [primary,extra]=await Promise.all([hasPrimary?legacyStatistics(event):Promise.resolve(null),ballDontLieResearch(event)]);
- if(primary?.status==='AVAILABLE'){
-  if(extra.status!=='AVAILABLE')return {...primary,gaps:[...primary.gaps,...extra.gaps.map(g=>'BALLDONTLIE: '+g)]};
-  if(!primary.pregame||!extra.pregame)return {...primary,pregame:false,gaps:[...primary.gaps,'Providers do not both confirm scheduled pregame state.']};
-  return {...primary,provider:primary.provider+' + BALLDONTLIE',evidence:[...primary.evidence,...extra.evidence],gaps:[...new Set([...primary.gaps,...extra.gaps])],risks:[...new Set([...primary.risks,...extra.risks])]};
- }
- return extra.status==='AVAILABLE'?extra:primary?.evidence.length?{...primary,gaps:[...primary.gaps,...extra.gaps]}:extra;
+ const profile=sportProfile(event.sport_key),bdl=bdlSport(event.sport_key);
+ const licensed=!!sports[event.sport_key]&&!!keyFor(sports[event.sport_key])&&process.env.SPORTSDATAIO_REAL_DATA_CONFIRMED==='true';
+ const primary=['baseball_mlb','americanfootball_nfl'].includes(event.sport_key)||licensed?legacyStatistics(event):profile?.research==='TEAM'?espnTeamResearch(event):espnIndividualResearch(event);
+ const requests=[primary];if(process.env.BALLDONTLIE_API_KEY&&bdl&&bdlEventDataSports.has(bdl))requests.push(ballDontLieResearch(event));
+ const settled=await Promise.allSettled(requests);const packets=settled.flatMap(p=>p.status==='fulfilled'?[p.value]:[]);
+ if(!packets.length)throw new Error('No sport-specific statistics provider completed this request.');
+ const ranked=[...packets].sort((a,b)=>Number(b.status==='AVAILABLE')-Number(a.status==='AVAILABLE')||Number(!!b.providerEventId)-Number(!!a.providerEventId)||b.evidence.length-a.evidence.length);
+ const chosen=ranked[0],usable=packets.filter(p=>p.providerEventId&&p.pregame&&p.evidence.length>0&&p.status!=='ERROR');
+ const conflict=packets.some(p=>p.providerEventId&&!p.pregame);
+ const evidence=chosen.pregame?usable.flatMap(p=>p.evidence):chosen.evidence;
+ const result:ResearchInput={...chosen,provider:chosen.pregame&&usable.length?usable.map(p=>p.provider).join(' + '):chosen.provider,evidence:evidence.length?evidence:chosen.evidence,pregame:chosen.pregame&&!conflict,gaps:[...new Set(packets.flatMap(p=>p.gaps))],risks:[...new Set(packets.flatMap(p=>p.risks))]};
+ if(conflict){result.phase=chosen.phase==='PREGAME'?'SUSPENDED':chosen.phase;result.gaps.push('Matched providers do not agree on scheduled pregame state. Approval is withheld.');}
+ result.identity={...eventIdentity(event),providerBindings:packets.filter(p=>p.providerEventId).map(p=>({provider:p.provider,eventId:p.providerEventId!}))};
+ result.coverage={family:profile?.family??null,researchAdapter:profile?.research??null,verifiedMetrics:[...new Set(result.evidence.filter(e=>e.entity!=='event').map(e=>e.metric))],requiredFeatures:profile?.required??['A verified sport-specific statistical module'],limits:'Evidence availability is separate from complete approval inputs and calibrated model readiness.'};
+ return result;
 }

@@ -1,0 +1,83 @@
+{
+  "datasets": [
+    {
+      "sport": "basketball_wnba",
+      "season": 2026,
+      "collectedAt": "2026-10-20T21:23:44.866Z",
+      "actualResults": 51,
+      "sourceResponses": [
+        {
+          "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/20/schedule?season=2026&seasontype=2",
+          "observedAt": "2026-10-20T21:23:44.761Z",
+          "sha256": "b38b992cf703900660aa661e5984379170468c456a60e4554ab2b90829c77799"
+        },
+        {
+          "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/20/schedule?season=2026&seasontype=3",
+          "observedAt": "2026-10-20T21:23:44.862Z",
+          "sha256": "603f9ac9f18947e660f15e47f7f44ffbacfa7901e33218be04eaf301a10dbfdd"
+        }
+      ],
+      "coverage": "Bounded verified-team sample; not an entire league archive.",
+      "pointInTimeTrainingEligible": false,
+      "reason": "Historical results were observed during this audit. Verified pregame feature/availability snapshots, completion timing and chronological training/calibration are still required."
+    },
+    {
+      "sport": "icehockey_nhl",
+      "season": 2027,
+      "collectedAt": "2026-10-20T21:24:14.723Z",
+      "actualResults": 8,
+      "sourceResponses": [
+        {
+          "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/10/schedule?season=2027&seasontype=2",
+          "observedAt": "2026-10-20T21:24:14.455Z",
+          "sha256": "56a220509d25cb64783d1dfde82da68fc66d08bbb9df03542174bf332b84766b"
+        },
+        {
+          "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/10/schedule?season=2027&seasontype=3",
+          "observedAt": "2026-10-20T21:24:14.721Z",
+          "sha256": "6142e441da2353d91350a0b3dcd929068f00b102ace322e8b305f7653bd5e983"
+        }
+      ],
+      "coverage": "Bounded verified-team sample; not an entire league archive.",
+      "pointInTimeTrainingEligible": false,
+      "reason": "Historical results were observed during this audit. Verified pregame feature/availability snapshots, completion timing and chronological training/calibration are still required."
+    },
+    {
+      "sport": "soccer_epl",
+      "season": 2026,
+      "collectedAt": "2026-10-20T21:23:47.679Z",
+      "actualResults": 7,
+      "sourceResponses": [
+        {
+          "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams/373/schedule?season=2026",
+          "observedAt": "2026-10-20T21:23:47.675Z",
+          "sha256": "cbe31bff7cfa3fe47dd4485ab6c68dbe012349e1a2c9c5c278d9af57a288e82e"
+        }
+      ],
+      "coverage": "Bounded verified-team sample; not an entire league archive.",
+      "pointInTimeTrainingEligible": false,
+      "reason": "Historical results were observed during this audit. Verified pregame feature/availability snapshots, completion timing and chronological training/calibration are still required."
+    },
+    {
+      "sport": "americanfootball_ncaaf",
+      "season": 2026,
+      "collectedAt": "2026-10-20T21:23:47.597Z",
+      "actualResults": 6,
+      "sourceResponses": [
+        {
+          "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/2390/schedule?season=2026&seasontype=2",
+          "observedAt": "2026-10-20T21:23:47.554Z",
+          "sha256": "76bdd597fe77b35977ba147151a49f1ca7aa84220d31a726ba360c06f5e5c6b3"
+        },
+        {
+          "url": "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/2390/schedule?season=2026&seasontype=3",
+          "observedAt": "2026-10-20T21:23:47.596Z",
+          "sha256": "3d316f7f969cb743bd42f3bfcba3556d84448df08f61b7d645a5c7c872f2e2af"
+        }
+      ],
+      "coverage": "Bounded verified-team sample; not an entire league archive.",
+      "pointInTimeTrainingEligible": false,
+      "reason": "Historical results were observed during this audit. Verified pregame feature/availability snapshots, completion timing and chronological training/calibration are still required."
+    }
+  ]
+}

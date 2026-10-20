@@ -16,13 +16,13 @@ export function BoardScan({initialCategory='NFL',requestedScan=false}:{initialCa
   const [scanProgress,setScanProgress]=useState('');
   const [scanError,setScanError]=useState<string|null>(null);
   const [league,setLeague]=useState('all');
-  const [marketKey,setMarketKey]=useState<MarketKey>('h2h');
+  const [marketKey,setMarketKey]=useState<MarketKey>(initialCategory==='Golf'?'outrights':'h2h');
   const scanContext=useRef('');scanContext.current=`${category}:${marketKey}`;
   const [query,setQuery]=useState('');
   const [status,setStatus]=useState('all');
   const [filters,setFilters]=useState(false);
   const [limit,setLimit]=useState(20);
-  const primary:Record<string,string>={NFL:'americanfootball_nfl',NBA:'basketball_nba',MLB:'baseball_mlb',NHL:'icehockey_nhl',NCAAF:'americanfootball_ncaaf',WNBA:'basketball_wnba',Soccer:'soccer',Tennis:'tennis'};
+  const primary:Record<string,string>={NFL:'americanfootball_nfl',NBA:'basketball_nba',MLB:'baseball_mlb',NHL:'icehockey_nhl',NCAAF:'americanfootball_ncaaf',NCAAB:'basketball_ncaab',NCAAW:'basketball_wncaab',WNBA:'basketball_wnba',Soccer:'soccer',Tennis:'tennis',MMA:'mma_mixed_martial_arts',Boxing:'boxing_boxing',Golf:'golf'};
   const {data,loading,error,reload}=useMarketFeed(league==='all'?primary[category]||'all':league,marketKey);
   const feeds=useMemo(()=>data?.sports.filter(feed=>matchesCategory(feed,category))??[],[data,category]);
   const rows=useMemo(()=>feeds.filter(feed=>(league==='all'||feed.key===league)&&(marketKey==='outrights'?feed.hasOutrights:!feed.hasOutrights)).flatMap(feed=>feed.events.map(event=>({event,feed,market:getMarket(event,marketKey)}))).filter(({event,market})=>(status!=='priced'||!!market?.outcomes.length)&&(status!=='aligned'||evaluateMarketAlignment(event,marketKey).aligned)&&`${eventTitle(event)} ${event.sport_title} ${market?.outcomes.map(o=>o.name).join(' ')??''}`.toLowerCase().includes(query.toLowerCase())).sort((a,b)=>Date.parse(a.event.commence_time)-Date.parse(b.event.commence_time)),[feeds,league,marketKey,status,query]);
@@ -40,7 +40,7 @@ export function BoardScan({initialCategory='NFL',requestedScan=false}:{initialCa
     },0);
     return()=>clearTimeout(timer);
   },[requestedScan,loading,data,category,marketKey,reload,rows]);
-  const chooseCategory=(value:string)=>{setCategory(value);setLeague('all');setLimit(20);};
+  const chooseCategory=(value:string)=>{setCategory(value);setLeague('all');setLimit(20);if(value==='Golf')setMarketKey('outrights');else if(category==='Golf')setMarketKey('h2h');};
   const options=['NFL','NBA','MLB','NHL','NCAAF','Soccer','Tennis'];
   return <Shell active="board"><div className="page board-page reference-board">
     <div className="reference-page-heading"><div><span className="eyebrow">SPORTS INTELLIGENCE</span><h1>Board Scan</h1><p>REAL DATA. MULTIPLE PERSPECTIVES.<br/>BETTER DECISIONS.</p></div><button className="icon-button board-search-button" onClick={()=>setFilters(!filters)} aria-label="Search and filter board"><Search size={21}/></button></div>

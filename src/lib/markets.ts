@@ -9,11 +9,11 @@ export type SportFeed = { key: string; title: string; group: string; description
 export type MarketSnapshot = { source: string; bookmaker: string; capturedAt: string; sports: SportFeed[] };
 export type MarketResponse = MarketSnapshot & { refreshMode: 'connector-snapshot' | 'automatic'; refreshIntervalSeconds: number | null; refreshError: string | null };
 export const marketNames: Record<MarketKey, string> = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total', outrights: 'Futures' };
-export const preferredSports = ['NFL', 'NBA', 'MLB', 'NHL', 'NCAAF', 'WNBA', 'Soccer', 'Tennis', 'MMA', 'Boxing', 'Cricket', 'Golf', 'Basketball', 'Hockey', 'Aussie Rules', 'Handball', 'Rugby'];
+export const preferredSports = ['NFL', 'NBA', 'MLB', 'NHL', 'NCAAF', 'NCAAB', 'NCAAW', 'WNBA', 'Soccer', 'Tennis', 'MMA', 'Boxing', 'Cricket', 'Golf', 'Basketball', 'Hockey', 'Aussie Rules', 'Handball', 'Rugby'];
 
 export function matchesCategory(sport: Pick<SportFeed, 'title' | 'group' | 'key'>, category: string) {
   if (category === 'All sports') return true;
-  const prefixes:Record<string,string>={NFL:'americanfootball_nfl',NCAAF:'americanfootball_ncaaf',NBA:'basketball_nba',WNBA:'basketball_wnba',MLB:'baseball_mlb',NHL:'icehockey_nhl'};
+  const prefixes:Record<string,string>={NFL:'americanfootball_nfl',NCAAF:'americanfootball_ncaaf',NCAAB:'basketball_ncaab',NCAAW:'basketball_wncaab',NBA:'basketball_nba',WNBA:'basketball_wnba',MLB:'baseball_mlb',NHL:'icehockey_nhl'};
   if(prefixes[category])return sport.key===prefixes[category] || sport.key.startsWith(prefixes[category]+'_');
   const groups: Record<string,string> = { Soccer:'Soccer', Tennis:'Tennis', MMA:'Mixed Martial Arts', Boxing:'Boxing', Cricket:'Cricket', Golf:'Golf', Basketball:'Basketball', Hockey:'Ice Hockey', 'Aussie Rules':'Aussie Rules', Handball:'Handball', Rugby:'Rugby' };
   if(category==='Rugby')return sport.group.startsWith('Rugby');

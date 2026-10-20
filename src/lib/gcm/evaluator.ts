@@ -2,7 +2,7 @@ import 'server-only';
 import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {getStatistics} from '../providers/statistics';
-import {bdlSport,bdlTeamResearchSports} from '../providers/balldontlie-sports';
+import {sportProfile} from '../sport-profiles';
 import {database,databaseFailure} from '../server/database';
 import {providerSucceeded,providerFailed} from '../server/provider-http';
 import {openAiFailure} from './openai-errors';
@@ -11,9 +11,9 @@ import {admitScan} from './scan-budget';
 import {GREEN_CHECK_RESEARCH_INSTRUCTIONS} from './green-check-instructions';
 import type {GcmEvaluation,ResearchInput} from '../research-types';
 import type {MarketEvent,MarketKey} from '../markets';
-const version='gcm-grounded-research-5';
+const version='gcm-grounded-research-6';
 const sideSchema=z.object({selection:z.string(),supportingEvidenceIds:z.array(z.string()).max(12),counterEvidenceIds:z.array(z.string()).max(12)}).strict();
-const decisionSchema=z.object({selection:z.string().nullable(),assessments:z.array(sideSchema).length(2),riskIndices:z.array(z.number().int().min(0)).max(30)}).strict();
+const decisionSchema=z.object({selection:z.string().nullable(),assessments:z.array(sideSchema).min(2).max(3),riskIndices:z.array(z.number().int().min(0)).max(30)}).strict();
 const busy=new Map<string,Promise<GcmEvaluation>>();
 function incomplete(event:MarketEvent,key:MarketKey,line:number|null,input:ResearchInput,reason:string):GcmEvaluation{return {id:randomUUID(),eventId:event.id,sport:event.sport_key,market:key,line,selection:null,status:input.status==='ERROR'?'ERROR':'INCOMPLETE',probability:null,edgePp:null,uncertainty:null,explanation:reason,factors:[],risks:[...input.risks,...input.gaps],modelVersion:version,createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+300000).toISOString(),eligibleForAlignment:false,eligibleForFeatured:false,provider:input.provider,input};}
 export async function storedGcm(event:MarketEvent,key:MarketKey,line:number|null):Promise<GcmEvaluation|null>{
@@ -40,11 +40,13 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
   if(!process.env.OPENAI_API_KEY||!process.env.OPENAI_MODEL){evaluation.explanation='Real statistics retrieved. Configure OPENAI_API_KEY and OPENAI_MODEL for server-side GCM research interpretation.';return save(evaluation);}
   if(!process.env.DATABASE_URL){evaluation.explanation='Real statistics retrieved. Configure DATABASE_URL and apply the migration before publishing auditable AI evaluations.';return evaluation;}
   // Partial verified statistics can support qualitative research; they cannot pass approval gates.
-  if(!(['baseball_mlb','americanfootball_nfl','basketball_nba','icehockey_nhl'].includes(event.sport_key)||bdlTeamResearchSports.has(bdlSport(event.sport_key)??''))||key!=='h2h'){evaluation.explanation=`Verified GCM research features are not mapped for ${event.sport_key} / ${key}. Moneyline research is never transferred to spread, total or futures markets.`;return save(evaluation);}
+  const profile=sportProfile(event.sport_key);
+  if(!profile||profile.research==='FIELD'||key!=='h2h'){evaluation.explanation=`Verified GCM research features are not mapped for ${event.sport_key} / ${key}. Golf/field markets require multi-runner research; moneyline research is never transferred to spreads, totals, props or futures.`;return save(evaluation);}
   const allowedIds=new Set(input.evidence.map(item=>item.id));
+  const selections=profile.family==='soccer'?[input.home,input.away,'Draw']:[input.home,input.away];
   const risks=[...input.risks,...input.gaps];
   const evidenceIds={type:'array',maxItems:12,items:{type:'string',enum:[...allowedIds]}};
-  const schema={type:'object',properties:{selection:{type:['string','null'],enum:[input.home,input.away,null]},assessments:{type:'array',minItems:2,maxItems:2,items:{type:'object',properties:{selection:{type:'string',enum:[input.home,input.away]},supportingEvidenceIds:evidenceIds,counterEvidenceIds:evidenceIds},required:['selection','supportingEvidenceIds','counterEvidenceIds'],additionalProperties:false}},riskIndices:{type:'array',maxItems:30,items:{type:'integer',minimum:0}}},required:['selection','assessments','riskIndices'],additionalProperties:false};
+  const schema={type:'object',properties:{selection:{type:['string','null'],enum:[...selections,null]},assessments:{type:'array',minItems:selections.length,maxItems:selections.length,items:{type:'object',properties:{selection:{type:'string',enum:selections},supportingEvidenceIds:evidenceIds,counterEvidenceIds:evidenceIds},required:['selection','supportingEvidenceIds','counterEvidenceIds'],additionalProperties:false}},riskIndices:{type:'array',maxItems:30,items:{type:'integer',minimum:0}}},required:['selection','assessments','riskIndices'],additionalProperties:false};
   try{await admitScan(`${identity}:${event.commence_time}`,visitor);}catch(error){
    const message=error instanceof Error?error.message:'';
    const busy=message.startsWith('This matchup');const limited=message.startsWith('The research scan limit');
@@ -52,7 +54,7 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
    return save({...evaluation,status:'ERROR',errorCode:reason.code,explanation:`Research scan admission: ${reason.message}`,expiresAt:new Date(Date.now()+90000).toISOString()});
   }
   try{
-   const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},cache:'no-store',signal:AbortSignal.timeout(45000),body:JSON.stringify({model:process.env.OPENAI_MODEL,store:false,max_output_tokens:1800,instructions:GREEN_CHECK_RESEARCH_INSTRUCTIONS,input:JSON.stringify({event:{sport:event.sport_key,home:input.home,away:input.away,start:input.startTime,market:key},evidence:input.evidence,risks}),text:{format:{type:'json_schema',name:'gcm_grounded_research',strict:true,schema}}})});
+   const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},cache:'no-store',signal:AbortSignal.timeout(45000),body:JSON.stringify({model:process.env.OPENAI_MODEL,store:false,max_output_tokens:1800,instructions:GREEN_CHECK_RESEARCH_INSTRUCTIONS,input:JSON.stringify({event:{sport:event.sport_key,family:profile.family,home:input.home,away:input.away,start:input.startTime,market:key,outcomeStructure:profile.family==='soccer'?'THREE_WAY_WITH_DRAW':'SETTLEMENT_REQUIRES_VERIFICATION'},requiredAssessments:selections,requiredSportFeatures:profile.required,evidence:input.evidence,risks}),text:{format:{type:'json_schema',name:'gcm_grounded_research',strict:true,schema}}})});
    if(!response.ok){
     const providerError=await response.json().catch(()=>null);
     const reason=openAiFailure(response.status,providerError?.error?.code);
@@ -63,8 +65,8 @@ export async function evaluateGcm(event:MarketEvent,key:MarketKey,line:number|nu
    const raw=payload.output?.flatMap((item:{content?:{type:string;text?:string}[]})=>item.content??[]).filter((part:{type:string})=>part.type==='output_text').map((part:{text:string})=>part.text).join('');
    if(payload.status!=='completed'||!raw)throw new Error('The AI provider did not complete a valid grounded response.');
    const decision=decisionSchema.parse(JSON.parse(raw));
-   if(decision.selection!==null&&![input.home,input.away].includes(decision.selection))throw new Error('Invalid research selection.');
-   if(new Set(decision.assessments.map(a=>a.selection)).size!==2||decision.assessments.some(a=>![input.home,input.away].includes(a.selection)))throw new Error('The AI did not independently assess both exact participants.');
+   if(decision.selection!==null&&!selections.includes(decision.selection))throw new Error('Invalid research selection.');
+   if(decision.assessments.length!==selections.length||new Set(decision.assessments.map(a=>a.selection)).size!==selections.length||decision.assessments.some(a=>!selections.includes(a.selection)))throw new Error('The AI did not independently assess every exact outcome, including a regulation draw where applicable.');
    if(decision.assessments.some(a=>[...a.supportingEvidenceIds,...a.counterEvidenceIds].some(id=>!allowedIds.has(id))||a.supportingEvidenceIds.some(id=>a.counterEvidenceIds.includes(id)))||decision.riskIndices.some(index=>index>=risks.length))throw new Error('The AI response referenced missing or contradictory evidence IDs.');
    const sideAssessments=decision.assessments.map(a=>({...a,supportingEvidenceIds:[...new Set(a.supportingEvidenceIds)],counterEvidenceIds:[...new Set(a.counterEvidenceIds)]}));
    const chosen=sideAssessments.find(a=>a.selection===decision.selection);

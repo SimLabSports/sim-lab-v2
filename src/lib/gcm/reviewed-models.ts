@@ -20,6 +20,10 @@ function validReview(model:Model,now:number){
  const t=model.training,r=model.review;
  return date(t.trainBefore)<date(t.calibrationBefore)&&date(t.calibrationBefore)<date(t.settledThrough)&&date(t.settledThrough)<=date(r.reviewedAt)&&now-date(t.settledThrough)<=366*86400000&&date(r.reviewedAt)<=now&&date(r.expiresAt)>now&&date(r.expiresAt)-date(r.reviewedAt)<=180*86400000&&fitValid(model.fit,model.features.length)&&new Set(model.features.map(f=>f.metric)).size===model.features.length&&model.features.every(f=>f.minimumValue<f.maximumValue)&&['RECENT_FORM','MATCHUP','CONSISTENCY','SAMPLE','EFFICIENCY','CONTEXT'].every(group=>model.features.some(f=>f.group===group))&&model.features.some(f=>f.group==='SAMPLE'&&f.minimumSample!==undefined)&&(model.phase!=='LIVE'||model.features.filter(f=>f.group==='LIVE_STATE').length>=2);
 }
+export function reviewedModelInventory(now=Date.now()){
+ const parsed=z.array(modelSchema).safeParse(registry);if(!parsed.success)return [];
+ return parsed.data.map(model=>({id:model.id,version:model.version,sport:model.sport,market:model.market,phase:model.phase,kind:model.kind,current:validReview(model,now),trained:model.training.train,calibrated:model.training.calibration,heldOut:model.training.holdout,expiresAt:model.review.expiresAt,reference:model.review.reference}));
+}
 function extract(model:Model,input:ResearchInput,now:number){
  const evidenceIds:string[]=[];const values:number[]=[];let homeAdvantages=0,awayAdvantages=0;
  for(const feature of model.features){
