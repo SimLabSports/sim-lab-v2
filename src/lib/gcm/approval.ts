@@ -27,7 +27,7 @@ export function approveGcm(event:MarketEvent,key:MarketKey,research:GcmEvaluatio
   gate('research',bothSides&&research.status!=='ERROR'?'PASS':'MISSING',bothSides?'Independent supporting and opposing evidence recorded for both sides.':'Independent AI research for both participants is not available.'),
   gate('source_integrity',uniqueEvidence&&!!input.providerEventId&&fresh(input.retrievedAt,now)&&input.evidence.length>0&&input.evidence.every(e=>evidenceValid(e.id))?'PASS':'MISSING','Requires a unique provider event, uniquely identified evidence, HTTPS citations and fresh observations.'),
   gate('data_completeness',input.status==='AVAILABLE'&&!input.gaps.length?'PASS':'MISSING',input.gaps.length?input.gaps.join(' '):input.status==='AVAILABLE'?'Required statistical packet is available.':'Required sport-specific statistical packet is incomplete.'),
-  gate('known_risks',input.risks.length?'FAIL':'PASS',input.risks.length?input.risks.join(' '):'No disqualifying risks reported in the verified input packet; separate clearance checks still apply.'),
+  gate('known_risks',input.risks.length?'FAIL':'PASS',input.risks.length?`${input.risks.length} unresolved availability, workload or integrity concerns prevent approval. Review the cited risk details below.`:'No disqualifying risks reported in the verified input packet; separate clearance checks still apply.'),
   gate('model_validation',prediction.status==='VALIDATED'?'PASS':'MISSING',prediction.reason),
  ];
  for(const kind of ['lineup','injuries','workload','environment','integrity','settlement',...(live?['liveState']:[])] as const){
