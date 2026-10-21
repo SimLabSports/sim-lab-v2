@@ -22,3 +22,13 @@ Aggregate expert counts, community counts, bookmaker consensus and BettingPros p
 Mapped documented sports: NFL, NBA, WNBA, MLB, NHL, NCAAF, NCAAB, soccer, UFC and golf. Golf/field research still needs its separate statistical model; tennis and boxing have no supported mapping in this consumer contract. Data availability is determined from actual responses, not assumed from this list.
 
 The documented consumer contract is personal/non-commercial; commercial display/redistribution permission is a separate provider entitlement, not something this key or code creates. Source logos/headshots excluded from consumer access are not requested or replaced through partner endpoints.
+
+## Verified production result, October 21, 2026
+
+The actual configured key returned VERIFIED, Plus membership and a 20-result page cap. Maryland books returned 18 available books including Fanatics. The NBA event query returned 13 events, and moneyline market ID 127 was discovered rather than hard-coded. The tested Magic-Hawks moneyline offered real aggregate counts but zero expert picks for either side; it did not supply qualifying independent source identities.
+
+The actual Wizards-Bucks event matched BettingPros event 27892 against Odds event 164cc0396837d5ff433215ffd3279283, ESPN event 401909835 and BALLDONTLIE event 21717923 at 2026-10-21T23:00:00Z. Production /api/statistics returned AVAILABLE, pregame=true and an attributed BettingPros schedule observation. /api/connections independently reported VERIFIED Plus access. Existing NBA forecast inputs remain supplied by the independently reviewed NBA model; no BettingPros probability was imported into it.
+
+Authenticated diagnostics also expose UTC budget usage/reset, allowing repeat-cache checks without disclosing hashed audit identifiers or credentials.
+
+The same production key also returned HTTP 200 for MLB (moneyline market 122) and NCAAB (market 224). Both event windows returned zero events for October 21–22; no live batting order, college efficiency row or expert pick was invented to fill them. Those adapters are implemented but their event-specific outputs remain unverified until a real eligible event is returned.

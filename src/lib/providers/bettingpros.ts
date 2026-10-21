@@ -17,13 +17,16 @@ const slot=z.object({slot:z.number().int(),participant:person});
 const eventSchema=z.object({id:z.number(),sport:z.string(),scheduled:z.string(),season:z.union([z.number(),z.string()]),status:z.string(),home:z.string().nullable(),visitor:z.string().nullable(),participants:z.array(person),lineups:z.object({home_lineup:z.array(slot).nullable().optional(),visitor_lineup:z.array(slot).nullable().optional(),home_lineup_type:z.string().nullable().optional(),visitor_lineup_type:z.string().nullable().optional()}).nullable().optional()});
 const eventsSchema=envelope.extend({events:z.array(eventSchema)});
 const base='https://api.bettingpros.com/v3';
+const budgetLimit=()=>Math.min(90,Math.max(1,Number(process.env.BETTINGPROS_DAILY_LIMIT)||90));
+export async function bettingProsBudgetStatus(){const r=await database().query<{used:number}>("SELECT count(*)::int AS used FROM intelligence_audit WHERE action='bettingpros_request' AND created_at>=date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'");const now=new Date();return {used:r.rows[0].used,limit:budgetLimit(),resetsAt:new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1)).toISOString()};}
+
 
 // Shared UTC-day budget survives serverless workers. A cache hit never spends allowance.
 async function admit(path:string){
  const client=await database().connect();
  try{await client.query('BEGIN');await client.query("SELECT pg_advisory_xact_lock(hashtext('simlab-bettingpros-budget'))");
   const count=await client.query<{used:number}>("SELECT count(*)::int AS used FROM intelligence_audit WHERE action='bettingpros_request' AND created_at>=date_trunc('day',now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'");
-  const limit=Math.min(90,Math.max(1,Number(process.env.BETTINGPROS_DAILY_LIMIT)||90));
+  const limit=budgetLimit();
   if(count.rows[0].used>=limit)throw Error('BettingPros daily request budget reached; retry after midnight UTC.');
   await client.query("INSERT INTO intelligence_audit(action,record_id) VALUES('bettingpros_request',$1)",[createHash('sha256').update(path).digest('hex')]);await client.query('COMMIT');
  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
@@ -42,7 +45,7 @@ const request=(path:string)=>path.startsWith('/books?')||path.startsWith('/marke
 
 export async function bettingProsAccess(){
  if(!process.env.BETTINGPROS_API_KEY)return {configured:false,status:'NOT_CONFIGURED',reason:'BETTINGPROS_API_KEY is absent.'};
- try{const result=await request('/books?location=MD');const books=z.array(z.object({id:z.number(),name:z.string()})).parse(result.data.books);return {configured:true,status:'VERIFIED',membership:result.data.consumer_api??null,checkedAt:result.observedAt,books:books.length,fanaticsAvailable:books.some(b=>/fanatics/i.test(b.name)),dailyRequestBudget:90};}
+ try{const result=await request('/books?location=MD');const books=z.array(z.object({id:z.number(),name:z.string()})).parse(result.data.books);return {configured:true,status:'VERIFIED',membership:result.data.consumer_api??null,checkedAt:result.observedAt,books:books.length,fanaticsAvailable:books.some(b=>/fanatics/i.test(b.name)),dailyRequestBudget:budgetLimit()};}
  catch(error){return {configured:true,status:'UNAVAILABLE',reason:error instanceof Error?error.message:'BettingPros access unavailable.'};}
 }
 
@@ -82,7 +85,7 @@ export async function enrichBettingPros(event:MarketEvent,input:ResearchInput):P
    else if(confirmed&&ids.length===2){result.lineupConfirmed=true;result.verifications=[...(result.verifications??[]).filter(v=>v.kind!=='lineup'),{kind:'lineup',status:'CLEAR',evidenceIds:ids,observedAt:page.observedAt}];}
   }
   result.gaps.push('BettingPros projections and aggregate pick counts are external opinions, not GCM training inputs or individually verified expert votes. NBA final injuries, starting five and workload are not cleared by this feed.');
- }catch(error){result.gaps.push(error instanceof Error?error.message:'BettingPros enrichment unavailable.');}
+ }catch(error){result.gaps.push(error instanceof z.ZodError?'BettingPros returned an event-schema mismatch; unsupported fields were not used.':error instanceof Error?error.message:'BettingPros enrichment unavailable.');}
  return result;
 }
 
@@ -94,5 +97,5 @@ export async function inspectBettingPros(sport:string,date:string){
  const moneyline=markets.filter(m=>m.slug==='moneyline'&&m.period==='game'&&m.active!==false);
  const sample=eventPage.data.events.find(e=>['scheduled','not_started','created'].includes(e.status)&&Date.parse(utc(e.scheduled))>Date.now());let offerSummary:unknown=null;
  if(sample&&moneyline.length===1){const r=await request(`/offers?${new URLSearchParams({sport,event_id:String(sample.id),market_id:String(moneyline[0].id),picks:'true',location:'MD',limit:'1'})}`);const offers=z.array(z.object({selections:z.array(z.object({participant:z.string().nullable().optional(),selection:z.string().nullable().optional(),picks:z.object({expert:z.number().optional(),quick:z.number().optional(),custom:z.number().optional(),sync:z.number().optional()}).passthrough().optional()}))})).parse(r.data.offers);offerSummary={observedAt:r.observedAt,sourceUrl:r.sourceUrl,offers:offers.length,selections:offers.flatMap(o=>o.selections),qualifyingIndependentSources:0,reason:'Aggregated counts do not supply individual analyst identities, original pick URLs or publication timestamps.'};}
- return {access,sport,observedAt:eventPage.observedAt,pagination:eventPage.data._pagination,events:eventPage.data.events.slice(0,3).map(e=>({id:e.id,status:e.status,scheduled:utc(e.scheduled),participants:e.participants.map(p=>({id:p.id,name:p.name,city:p.team?.city})),lineups:e.lineups??null})),moneylineMarkets:moneyline,offerSummary};
+ return {access,budget:await bettingProsBudgetStatus(),sport,observedAt:eventPage.observedAt,pagination:eventPage.data._pagination,events:eventPage.data.events.slice(0,3).map(e=>({id:e.id,status:e.status,scheduled:utc(e.scheduled),participants:e.participants.map(p=>({id:p.id,name:p.name,city:p.team?.city})),lineups:e.lineups??null})),moneylineMarkets:moneyline,offerSummary};
 }
