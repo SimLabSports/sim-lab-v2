@@ -28,6 +28,8 @@ The schedule can contain adjacent dates. Matching uses both participant roles, a
 
 ## Approval remains conditional
 
+The live verification exposed an eight-second lineup timeout. Provider calls now have a bounded fifteen-second deadline, and the GCM route allows 120 seconds for the statistics pipeline plus its unchanged 45-second OpenAI deadline. Negative responses/timeouts remain cached, with no automatic retries; research request limits remain unchanged.
+
 This key improves actual evidence but does not supply calibrated models for every sport, full injury/minutes restriction clearance, settlement verification, or three independent expert identities. Existing NBA model bounds, risk gates, uncertainty requirements and alignment rules remain unchanged. An availability assessment is not a GCM approval and cannot light a second check by itself.
 
 No additional credential is needed to use the verified endpoints. A 404 response does not establish whether the cause is event coverage, endpoint implementation or subscription entitlement. That distinction must be confirmed with the provider before recommending any plan upgrade. Documentation: https://docs.sportsapipro.com/llms.txt

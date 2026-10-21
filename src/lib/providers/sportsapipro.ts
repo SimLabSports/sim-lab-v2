@@ -19,7 +19,7 @@ async function load(path:string){
  if(!process.env.SPORTSAPIPRO_API_KEY)throw Error('SportsAPIPro key is not configured.');
  await admit(path);
  try{
-  const r=await fetch(base+path,{headers:{'x-api-key':process.env.SPORTSAPIPRO_API_KEY},cache:'no-store',signal:AbortSignal.timeout(8000)});
+  const r=await fetch(base+path,{headers:{'x-api-key':process.env.SPORTSAPIPRO_API_KEY},cache:'no-store',signal:AbortSignal.timeout(15000)});
   const quota={remaining:r.headers.get('x-ratelimit-remaining'),reset:r.headers.get('x-ratelimit-reset')};
   if(!r.ok)return {ok:false,status:r.status,observedAt:new Date().toISOString(),sourceUrl:base+path,data:null,quota};
   const raw:unknown=await r.json();if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error();const data=raw as Record<string,unknown>;
@@ -30,7 +30,7 @@ async function load(path:string){
  }
 }
 // Cache unsuccessful HTTP responses as well: polling cannot repeatedly consume a rejected allowance.
-const cached=unstable_cache(load,['sportsapipro-v1'],{revalidate:600});
+const cached=unstable_cache(load,['sportsapipro-v2'],{revalidate:600});
 const status=unstable_cache(load,['sportsapipro-status-v1'],{revalidate:3600});
 const scheduled=z.object({success:z.literal(true),events:z.array(z.object({id:z.number().int().positive(),homeTeam:z.object({name:z.string()}),awayTeam:z.object({name:z.string()}),startTimestamp:z.number(),status:z.object({type:z.string()}),tournament:z.object({name:z.string()})}))});
 const player=z.object({player:z.object({id:z.number(),name:z.string()}),substitute:z.boolean()});
