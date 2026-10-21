@@ -26,6 +26,6 @@ export async function enrichSettlement(event:MarketEvent,input:ResearchInput):Pr
   result.settlement='TWO_WAY_REFUND_ON_VOID';
   if(!result.verifications.some(v=>v.kind==='settlement'&&v.status==='BLOCKED'))result.verifications=[...result.verifications.filter(v=>v.kind!=='settlement'),{kind:'settlement',status:'CLEAR',evidenceIds:[id],observedAt:contract.observedAt}];
   result.gaps.push('Maryland full-game moneyline contract mapped. Conditional value does not establish unchanged venue/schedule, absence of integrity concerns, or a probability of action/void.');
- }catch(e){result.gaps.push(e instanceof Error?e.message:'Bookmaker settlement contract unavailable.');}
+ }catch(e){const reason=e instanceof Error?e.message:'Bookmaker settlement contract unavailable.';result.gaps.push(reason);if(!result.verifications.some(v=>v.kind==='settlement'&&v.status==='BLOCKED'))result.verifications=[...result.verifications.filter(v=>v.kind!=='settlement'),{kind:'settlement',status:'UNKNOWN',evidenceIds:[],observedAt:new Date().toISOString(),reason}];}
  return result;
 }

@@ -2,6 +2,12 @@
 
 Scope: NBA full-game moneyline, Fanatics, owner-confirmed Maryland. Expert Consensus remains paused. No visual redesign, simulated games, fabricated probabilities or reduced approval thresholds.
 
+## Production verification
+
+The v10 production scan returned HTTP 200 and persisted evaluation `ed2621be-c538-4304-a1bd-c832a2f18c0e`. It independently assessed both teams and read back the same stored ID, including both exact official NBA injury-report observations. Its result is LEAN_ONLY, not official approval; alignment remains 1/3. The baseline still withholds the out-of-domain Wizards forecast. The report available during the scan was just beyond the 15-minute publication-age window, so current-source freshness correctly remained incomplete.
+
+**Additional production access blocker:** Fanatics Maryland's rule page responds successfully locally but returned HTTP 403 to Vercel. The contract mapping and fingerprint check are implemented and verified locally, but settlement is **MISSING in production** until an authorized accessible official rule source is available. There is no proxy, access-control workaround or silently freshened offline substitute. The gate displays the exact source failure. Owner/provider involvement is needed to obtain authorized deployment access or an equivalent official source; another generic sports-data key is not proven to resolve this.
+
 ## Implemented and verified before deployment
 
 1. **Independent baseline calibration reproduced.** Rebuilt the deployed model from its original 6,138 verified completed NBA games: 3,533 training games, 1,224 calibration games, 1,224 untouched holdout games. Model features, coefficients, calibrator, dataset hash and held-out statistics exactly matched deployment. Independently checked 48,960 held-out feature references for target/future-result leakage. Brier 0.20882358 versus baseline 0.24700504; log loss 0.60564006 versus 0.68714527; ECE 0.02181912. This is a team-efficiency baseline, not an injury-adjusted model or a betting-return claim. The reproduction receipt is `data/gcm-validation/nba-efficiency-v1-reproduction.json`.

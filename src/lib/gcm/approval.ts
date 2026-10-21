@@ -39,7 +39,8 @@ export function approveGcm(event:MarketEvent,key:MarketKey,research:GcmEvaluatio
   const proof=input.verifications?.find(v=>v.kind===kind);
   const confirmed=kind==='lineup'?input.lineupConfirmed:kind==='injuries'?input.injuriesVerified:true;
   const valid=proof&&confirmed&&proof.evidenceIds.length>0&&proof.evidenceIds.every(currentEvidenceValid)&&fresh(proof.observedAt,now,age);
-  base.push(gate(kind,valid&&proof.status==='CLEAR'?'PASS':proof?.status==='BLOCKED'?'FAIL':'MISSING',valid&&proof.status==='CLEAR'?`Current ${kind} clearance is backed by cited provider evidence.`:proof?.status==='BLOCKED'?`Verified ${kind} concern disqualifies approval.`:proof?.reason??`Current, cited ${kind} clearance is missing or stale.`,proof?.evidenceIds));
+  const missingReason=proof?.reason??(kind==='settlement'?input.gaps.find(g=>g.startsWith('Fanatics Maryland')):undefined)??`Current, cited ${kind} clearance is missing or stale.`;
+  base.push(gate(kind,valid&&proof.status==='CLEAR'?'PASS':proof?.status==='BLOCKED'?'FAIL':'MISSING',valid&&proof.status==='CLEAR'?`Current ${kind} clearance is backed by cited provider evidence.`:proof?.status==='BLOCKED'?`Verified ${kind} concern disqualifies approval.`:missingReason,proof?.evidenceIds));
  }
  const candidates:CandidateDecision[]=[input.home,input.away].filter(Boolean).map(selection=>{
   const outcome=market?.outcomes.find(o=>o.name===selection),price=outcome?.price??null,implied=price===null?null:impliedProbability(price);
