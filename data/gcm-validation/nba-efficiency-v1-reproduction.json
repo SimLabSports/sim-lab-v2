@@ -1,0 +1,86 @@
+{
+  "checkedAt": "2026-10-21T18:21:23.644Z",
+  "modelId": "nba-official-rolling-efficiency",
+  "version": "1",
+  "sourceGames": 6138,
+  "counts": {
+    "train": 3533,
+    "calibration": 1224,
+    "holdout": 1224
+  },
+  "sourceHash": "235ebe135bd2398e00090954d42591000d356b2fcf6a2cbe4b725b872bea64c2",
+  "identicalFeaturesFitCalibrationAndHoldout": true,
+  "verifiedHeldOutFeatureReferences": 48960,
+  "brier": 0.20882357584202982,
+  "logLoss": 0.6056400605141036,
+  "calibrationError": 0.02181912085400535,
+  "baseline": {
+    "brier": 0.24700504224506148,
+    "logLoss": 0.6871452705516351,
+    "calibrationError": 0.0011629380500313147,
+    "bins": [
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 1224,
+        "meanProbability": 0.5559015001415346,
+        "observedFrequency": 0.5547385620915033
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      },
+      {
+        "count": 0,
+        "meanProbability": null,
+        "observedFrequency": null
+      }
+    ]
+  },
+  "bootstrapBrierImprovement95": [
+    0.02628516266533572,
+    0.05060970086781884
+  ],
+  "settlementBasis": "DECISIVE_RESULT_CONDITIONAL",
+  "passes": true,
+  "limits": [
+    "Team-efficiency baseline only; no validated injury/roster-change adjustment.",
+    "Training feature bounds and calibration-bin minimums remain unchanged.",
+    "Conditional decisive-result value is not an estimate of action/void frequency or unconditional ROI.",
+    "No model or green approval is published by this audit."
+  ]
+}

@@ -2,6 +2,8 @@ import 'server-only';
 import { z } from 'zod';
 import {enrichBettingPros} from './bettingpros';
 import {enrichSportsApiPro} from './sportsapipro';
+import {enrichNbaInjuries} from './nba-injuries';
+import {enrichSettlement} from './settlement';
 import { mlbResearch } from './mlb';
 import { nflResearch } from './nfl';
 import {ballDontLieResearch} from './balldontlie';
@@ -69,5 +71,7 @@ export async function getStatistics(event:MarketEvent):Promise<ResearchInput>{
  if(conflict){result.phase=chosen.phase==='PREGAME'?'SUSPENDED':chosen.phase;result.gaps.push('Matched providers do not agree on scheduled pregame state. Approval is withheld.');}
  result.identity={...eventIdentity(event),providerBindings:packets.filter(p=>p.providerEventId).map(p=>({provider:p.provider,eventId:p.providerEventId!}))};
  result.coverage={family:profile?.family??null,researchAdapter:profile?.research??null,verifiedMetrics:[...new Set(result.evidence.filter(e=>e.entity!=='event').map(e=>e.metric))],requiredFeatures:profile?.required??['A verified sport-specific statistical module'],limits:'Evidence availability is separate from complete approval inputs and calibrated model readiness.'};
- return enrichSportsApiPro(event,await enrichBettingPros(event,result));
+ const enriched=await enrichSettlement(event,await enrichNbaInjuries(event,await enrichSportsApiPro(event,await enrichBettingPros(event,result))));
+ if(enriched.coverage)enriched.coverage={...enriched.coverage,verifiedMetrics:[...new Set(enriched.evidence.filter(e=>e.entity!=='event').map(e=>e.metric))]};
+ return enriched;
 }

@@ -1,0 +1,13 @@
+{
+  "id": "fanatics-md-nba-fullgame-v1",
+  "jurisdiction": "MD",
+  "bookmaker": "fanatics",
+  "sport": "basketball_nba",
+  "market": "h2h",
+  "effectiveDate": "2026-08-31",
+  "reviewedAt": "2026-10-21T18:28:41.720Z",
+  "sourceUrl": "https://sportsbook.fanatics.com/legal/md/house-rules/",
+  "normalization": "Strip tags, decode nbsp/amp, collapse whitespace; General Basketball Rules through Basketball Player Market Rules (exclusive).",
+  "sectionSha256": "a19265254bc3fd7d046a5cff211a3f708c1fab5022dd571083ef1d27faa8de26",
+  "basis": "Decisive-result conditional; overtime included; ties and voids refund; event integrity checked separately."
+}
