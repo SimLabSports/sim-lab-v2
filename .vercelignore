@@ -1,0 +1,7 @@
+.cache/
+.env*
+!.env.example
+.next-dev/
+artifacts/qa/
+*.tsbuildinfo
+dev.log
